@@ -201,6 +201,50 @@ export const RewriterInput = z.object({
 })
 ```
 
+### 编排器预筛规则（target_bullet_ids 怎么选）
+
+编排器在调用 RewriterAgent 之前，用以下确定性规则从 `ResumeStruct.bullets` 中选出最值得改写的 top N（默认 N=8）：
+
+```ts
+function selectRewriteTargets(
+  bullets: ResumeBullet[],
+  jd: JDStruct,
+  scores: MatchScores
+): string[] {
+  const jdRequiredKeywords = new Set(
+    jd.hard_skills.filter(s => s.level === 'required').map(s => s.name.toLowerCase())
+  )
+  const missingOrWeak = new Set(
+    scores.keyword_coverage
+      .filter(k => k.hit !== 'strong')
+      .map(k => k.keyword.toLowerCase())
+  )
+
+  // 每条 bullet 打分（高分优先改）
+  const scored = bullets.map(b => {
+    let score = 0
+    if (!b.has_metrics) score += 3                          // 缺指标：高优先级
+    const text = b.text.toLowerCase()
+    for (const kw of missingOrWeak) {
+      if (text.includes(kw)) score += 2                     // 可以挂上缺失关键词
+    }
+    for (const kw of jdRequiredKeywords) {
+      if (!text.includes(kw)) score += 1                    // 应植入但还没出现
+    }
+    if (/(参与|协助|帮助|负责)/.test(b.text)) score += 1     // 弱动词
+    return { id: b.id, score }
+  })
+
+  return scored
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map(x => x.id)
+}
+```
+
+注意：这个预筛**依赖 MatchScorer 的输出**，因此 RewriterAgent 的依赖图需调整为依赖 `match-scorer`，而不是仅依赖第一层两个 Agent。见 `AgentRegistry` 更新版本。
+
 ### 输出
 
 ```ts
@@ -270,6 +314,7 @@ export type InterviewQuestion = z.infer<typeof InterviewQuestion>
 
 ```ts
 export const AnalysisContext = z.object({
+  schema_version: z.string().default('1.0.0'),  // 严格匹配 SCHEMA_VERSION 常量
   trace_id: z.string(),
   started_at: z.number(),  // ms epoch
 
@@ -278,6 +323,7 @@ export const AnalysisContext = z.object({
     resume_text: z.string(),
     locale: Locale,
     provider: z.enum(['llama', 'claude']).default('llama'),
+    is_demo: z.boolean().default(false),  // demo 模式 (?demo=1) 短路真实 LLM
   }),
 
   // 第一层产出
@@ -384,9 +430,9 @@ export const AgentRegistry = {
   'rewriter': {
     inputSchema: RewriterInput,
     outputSchema: RewriterOutput,
-    reads: ['jd_struct', 'resume_struct'],
+    reads: ['jd_struct', 'resume_struct', 'scores'],   // 依赖 scores 做预筛
     writes: ['rewrites'],
-    deps: ['jd-parser', 'resume-analyst'],
+    deps: ['jd-parser', 'resume-analyst', 'match-scorer'],
     tier: 'heavy' as const,
   },
   'interviewer': {

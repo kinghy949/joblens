@@ -19,24 +19,33 @@ V1 开发开始前已完成的设计文档（点击查看）：
 | 文档 | 内容 | 状态 |
 |---|---|---|
 | [`docs/design.md`](docs/design.md) | 产品蓝图：定位 / 用户旅程 / 三个关键页面线框图 / V1 范围 vs V2 留白 | ✅ |
-| [`docs/architecture.md`](docs/architecture.md) | 系统架构：分层 / Agent 编排 DAG / 共享上下文 / SSE 流式协议 / 部署拓扑 | ✅ |
-| [`docs/schemas.md`](docs/schemas.md) | 全部 Agent 的 Zod schema + AgentRegistry + Llama JSON 输出加固模板 | ✅ |
+| [`docs/architecture.md`](docs/architecture.md) | 系统架构：分层 / 三阶段 DAG / 共享上下文 / 双通道流式协议 / 部署拓扑 | ✅ |
+| [`docs/schemas.md`](docs/schemas.md) | 全部 Agent 的 Zod schema + AgentRegistry + Rewriter 预筛规则 + Llama JSON 加固模板 | ✅ |
 | [`docs/prompts.md`](docs/prompts.md) | 5 个 Agent 的 system prompt 草稿 + 通用框架 + 迭代规则 | ✅ |
 | [`docs/deployment.md`](docs/deployment.md) | Docker Compose 部署方案：服务拓扑 / Caddyfile / Dockerfile / Runbook / 备份 | ✅ |
+| [`docs/risks.md`](docs/risks.md) | 已识别风险清单 + 应对策略 + 跟踪 issue | ✅ |
 | [`fixtures/demo-jd.md`](fixtures/demo-jd.md) | 内置示例 JD（高级后端 + LLM 应用方向） | ✅ |
 | [`fixtures/demo-resume.md`](fixtures/demo-resume.md) | 内置示例简历（有意设计的可改写痛点） | ✅ |
 
-## 多 Agent 编排
+## 多 Agent 编排（5 Agent · 三阶段 DAG）
 
 ```
-                 ┌→ JDParserAgent     ─┐
-[用户输入] ──→ │                       ├→ MatchScorerAgent  ─┐
-                 └→ ResumeAnalystAgent ─┤                     ├→ [结果页]
-                                        ├→ RewriterAgent ────┤
-                                        └→ InterviewerAgent ─┘
+阶段 1 (并行)                  阶段 2 (单独)              阶段 3 (并行)
+┌──────────────────┐
+│ JDParserAgent    │ ─┐
+└──────────────────┘  │                              ┌──────────────────┐
+                      ├──→ MatchScorerAgent  ────┬──→│ RewriterAgent    │ ─┐
+┌──────────────────┐  │                          │   └──────────────────┘  │
+│ ResumeAnalystAgnt│ ─┘                          │   ┌──────────────────┐  ├──→ [结果页]
+└──────────────────┘                             └──→│ InterviewerAgent │ ─┘
+                                                     └──────────────────┘
 ```
 
-第一层（JD 解析 + 简历分析）并行；第二层（评分 + 改写 + 面试问题）等第一层完成后并行。
+- **阶段 1**：JD 解析 + 简历分析 并行
+- **阶段 2**：匹配评分（基于阶段 1 输出）
+- **阶段 3**：改写建议 + 面试问题 并行（前者还会基于评分做预筛）
+
+分析中页面显示 4 个面板（Rewriter 和 Interviewer 同期出现），UI 体感"一片接一片亮起来"。
 
 ## 技术栈
 
