@@ -9,3 +9,5 @@ dist/
 build/
 .vercel/
 .turbo/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
