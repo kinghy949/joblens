@@ -15,10 +15,14 @@ flowchart TB
         Viz[可视化层<br/>Recharts + diff-viewer]
     end
 
-    subgraph Edge["Vercel Edge / Node Runtime"]
+    subgraph Server["自托管 VPS (Docker Compose)"]
+        Caddy[Caddy<br/>反向代理 + TLS]
+        Next[Next.js 容器<br/>Node Runtime]
         API[/API Routes<br/>app/api/*/]
         Orch[Agent 编排器<br/>orchestrator.ts]
-        Parse[简历解析器<br/>pdf-parse / Claude PDF]
+        Parse[简历解析器<br/>pdf-parse]
+        PG[(Postgres 16)]
+        Redis[(Redis<br/>rate limit)]
     end
 
     subgraph Agents["Agent 层 (无状态函数)"]
@@ -32,17 +36,20 @@ flowchart TB
     subgraph External["外部服务"]
         NIM[NVIDIA NIM 默认<br/>Llama 3.3 70B<br/>OpenAI 兼容接口]
         Claude[Anthropic API 备选<br/>Sonnet 4.6 / Haiku 4.5<br/>+ prompt caching]
-        Supa[(Supabase<br/>Postgres + Storage)]
+        Supa[(Postgres<br/>Postgres + Storage)]
     end
 
     UI --> SSE
-    SSE -->|POST /api/analyze| API
+    SSE -->|HTTPS POST /api/analyze| Caddy
+    Caddy --> Next
+    Next --> API
     API --> Parse
     API --> Orch
     Orch --> A1 & A2 & A3 & A4 & A5
     A1 & A2 & A3 & A4 & A5 -->|stream chunks| NIM
     A1 & A2 & A3 & A4 & A5 -.->|provider=claude 时| Claude
-    API -->|可选: 持久化分享链接| Supa
+    API -->|可选: 分享链接| PG
+    API -->|rate limit 计数| Redis
     API -.->|流式 token| SSE
     SSE --> Viz
 ```
@@ -271,7 +278,7 @@ data: { "context": {...} }
 
 ---
 
-## 五、数据模型 (Supabase / Postgres)
+## 五、数据模型 (Postgres 16)
 
 V1 只有"分享链接"一个写库场景，schema 极简：
 
@@ -287,7 +294,13 @@ create table shared_results (
 create index on shared_results (expires_at);
 ```
 
-定时任务（Vercel Cron / Supabase pg_cron）每小时清理过期数据，落实"24h 后删除"承诺。
+清理任务由 `cron` 容器每小时跑一次 SQL：
+
+```sql
+delete from shared_results where expires_at < now();
+```
+
+落实"24h 后删除"承诺。
 
 **简历 PDF 不入库**：上传后只在内存里跑解析，解析完即丢；只有结构化后的文本（脱敏可控）才可能进 `shared_results`。
 
@@ -324,7 +337,7 @@ joblens/
 │   ├── prompts/                  # 每个 Agent 的 prompt 模板
 │   ├── parse-resume.ts           # PDF/MD → text
 │   ├── client/                   # 客户端工具
-│   └── server/                   # 服务端工具（含 Supabase client）
+│   └── server/                   # 服务端工具（含 Postgres client）
 ├── fixtures/
 │   ├── demo-resume.md
 │   └── demo-jd.md
@@ -337,41 +350,65 @@ joblens/
 
 ---
 
-## 七、部署拓扑
+## 七、部署拓扑（自托管 · Docker Compose）
 
 ```
-              ┌─────────────────────────────┐
-              │   joblens.xxx (自有域名)     │
-              │   ↓ DNS / Cloudflare         │
-              └─────────────────────────────┘
-                          │
-                          ▼
-              ┌─────────────────────────────┐
-              │   Vercel (Edge + Functions) │
-              │   - Next.js 15 App Router   │
-              │   - Edge Runtime: /api/result/*
-              │   - Node Runtime: /api/analyze (pdf-parse)
-              └─────────────────────────────┘
-                  │                        │
-                  ▼                        ▼
-     ┌────────────────────┐  ┌──────────────────┐  ┌────────────────────┐
-     │ NVIDIA NIM (默认)   │  │ Anthropic API     │  │ Supabase            │
-     │ - Llama 3.3 70B    │  │ (备选, ?provider= │  │ - Postgres (shares) │
-     │ - OpenAI 兼容       │  │  claude)          │  │ - Cron (cleanup)    │
-     │ - 免费额度          │  │ - Sonnet/Haiku   │  │                     │
-     └────────────────────┘  │ - Prompt caching │  └────────────────────┘
-                              └──────────────────┘
+                 ┌─────────────────────────────────┐
+                 │   joblens.xxx (自有域名)         │
+                 │   ↓ DNS A 记录指向服务器 IP      │
+                 └─────────────────────────────────┘
+                                │
+                                ▼
+            ┌──────────────────────────────────────────┐
+            │   单台 VPS (2C4G 起步, Linux + Docker)    │
+            │   ┌────────────────────────────────────┐ │
+            │   │  docker compose 网络                │ │
+            │   │                                     │ │
+            │   │  caddy ──TLS──► next ──┐            │ │
+            │   │   :80/:443       :3000 │            │ │
+            │   │                        ├──► postgres│ │
+            │   │                        │     :5432  │ │
+            │   │                        └──► redis   │ │
+            │   │                              :6379  │ │
+            │   │                                     │ │
+            │   │  cron 容器 (清理过期 shared_results)  │ │
+            │   └────────────────────────────────────┘ │
+            └──────────────────────────────────────────┘
+                  │                      │
+                  ▼                      ▼
+     ┌────────────────────┐  ┌──────────────────────┐
+     │ NVIDIA NIM (默认)    │  │ Anthropic API 备选    │
+     │ Llama 3.3 70B       │  │ Sonnet/Haiku          │
+     │ OpenAI 兼容          │  │ + Prompt caching      │
+     └────────────────────┘  └──────────────────────┘
 ```
 
-**为什么 Vercel？**
-- Next.js 15 一键部署，Edge + Node 混合 runtime 原生支持
-- Preview Deployment：每个 PR 一个 URL，面试时可直接发链接
-- 域名绑定 5 分钟
+**服务清单（docker-compose 中的 service）：**
 
-**为什么 Supabase？**
-- Postgres + 自带 Auth + Storage + Cron 一站式
-- 免费额度足够覆盖 demo 期流量
-- 后续要做账号系统时无缝接入
+| service | 镜像 | 端口 | 数据卷 | 作用 |
+|---|---|---|---|---|
+| `caddy` | `caddy:2-alpine` | 80, 443 | `caddy_data`, `caddy_config` | 反向代理 + 自动 Let's Encrypt 证书 |
+| `next` | 项目自构建 (`Dockerfile`) | 3000 (内网) | — | Next.js 15 standalone 输出 |
+| `postgres` | `postgres:16-alpine` | 5432 (内网) | `pg_data` | 存储 `shared_results` |
+| `redis` | `redis:7-alpine` | 6379 (内网) | `redis_data` (可选) | Rate limit 计数 |
+| `cron` | `postgres:16-alpine` (复用) 或 alpine + psql | — | — | 每小时清理过期分享记录 |
+
+详细配置见 `docs/deployment.md`。
+
+**为什么自托管而不是 Vercel？**
+- **完全可控**：所有数据留在自有服务器，"简历内容不出境"是更硬的隐私承诺
+- **零厂商绑定**：Next.js standalone 模式不依赖 Vercel 特有能力
+- **成本可预测**：一台 2-4 美元/月的 VPS 就能跑，不会因流量爆发产生意外账单
+- **可讲性**：面试时"我自己搭的 docker compose + Caddy + Postgres" 比"我部署到 Vercel" 多 10 分技术含量
+- **trade-off**：失去 Preview Deployment、Edge Runtime、Vercel Analytics——这些用 PR 链接、Node Runtime、`next` 容器内日志即可替代
+
+**Runtime 调整：**
+- 所有 API 路由统一跑 **Node Runtime**（不再有 Edge / Node 混合）
+- Next.js 用 `output: 'standalone'` 构建，最终镜像 < 200MB
+
+**域名与 TLS：**
+- DNS 用 Cloudflare（DNS-only，不开橙云，避免 SSE 长连接被截）
+- 证书：Caddy 自动申请 Let's Encrypt，配置一行 `joblens.xxx { reverse_proxy next:3000 }`
 
 ---
 
@@ -385,8 +422,8 @@ joblens/
 | 一次完整分析 API 成本 — Llama (NIM) 模式 | $0（免费额度内），超额后按 NIM 付费定价 |
 | 一次完整分析 API 成本 — Claude 无缓存 | < $0.05 |
 | 一次完整分析 API 成本 — Claude 缓存命中 | < $0.015 |
-| Vercel 月度费用 (Demo 期 ≤ 1000 次/月) | $0 (Hobby) |
-| Supabase 月度费用 (Demo 期) | $0 (Free tier) |
+| VPS 月度费用 (2C4G, Demo 期) | ~$5 (Hetzner CX22 / Vultr / DigitalOcean basic) |
+| 数据库/缓存 月度费用 | $0（容器内自托管 Postgres + Redis） |
 
 ---
 
@@ -396,12 +433,13 @@ V1 不上专业 APM，但要有最小可见性：
 
 | 数据 | 收集方式 | 用途 |
 |---|---|---|
-| 每个 Agent 的 duration / tokens / cost | 服务端 `console.log` + Vercel Logs | 调优 |
+| 每个 Agent 的 duration / tokens / cost | 服务端 `pino` 结构化日志 → `docker logs` / 落盘 `/var/log/joblens/` | 调优 |
 | 整体分析成功率 / 失败率 | 同上 | 监控 |
-| 用户行为 (开始分析 / 完成 / 导出 / 分享) | Vercel Analytics (免费) | 漏斗 |
+| 用户行为 (开始分析 / 完成 / 导出 / 分享) | 自埋点 → Postgres `events` 表（V2 再做） | 漏斗 |
 | Prompt cache 命中率 | 从 Anthropic API 响应头读，记日志 | 验证成本估算 |
+| 容器/主机指标 | `docker stats` + VPS 厂商自带监控 | 资源告警 |
 
-V2 可以接 OpenTelemetry → Grafana Cloud / Highlight.io。
+V2 可以加 `dozzle` (容器日志 UI) 或上 OpenTelemetry → Grafana Cloud。
 
 ---
 
@@ -414,7 +452,8 @@ V2 可以接 OpenTelemetry → Grafana Cloud / Highlight.io。
 | Anthropic API 全局不可用 | API 返回 503 + 友好文案；不熔断重试（避免雪崩） |
 | PDF 解析失败 | 提示用户改为粘贴文本；保留"用示例简历"作为兜底 |
 | 用户上传超大文件 (>5MB) | 客户端预检拦截 |
-| Supabase 不可用 | 分享链接功能降级为"复制 JSON 到剪贴板"，主流程不受影响 |
+| Postgres 不可用 | 分享链接功能降级为"复制 JSON 到剪贴板"，主流程不受影响 |
+| Redis 不可用 | Rate limit 降级为"内存计数"（仅当前 Node 进程，重启后清零），不阻塞主流程 |
 
 ---
 
@@ -425,10 +464,10 @@ V2 可以接 OpenTelemetry → Grafana Cloud / Highlight.io。
 | 简历内容传输 | HTTPS only；不写入服务端日志（结构化日志显式 redact `resume_text` 字段） |
 | 简历内容存储 | 默认**不入库**；只有用户主动点"生成分享链接"才落 `shared_results` |
 | 数据保留 | 分享链接 24h 自动过期 + 删除（Cron） |
-| API 滥用防护 | IP-based rate limit (Upstash Redis / Vercel KV)：10 次/小时/IP |
+| API 滥用防护 | IP-based rate limit (本地 Redis)：10 次/小时/IP |
 | Prompt injection | 用户输入用明确分隔符包裹 (`<jd>...</jd>`)；system prompt 加防御指令；输出校验剔除可疑指令 |
 | 第三方 (Anthropic) 隐私 | 首页明确告知"内容会发送给 Anthropic 用于推理，不会用于训练"（引用 Anthropic 政策） |
-| 密钥管理 | `NVIDIA_API_KEY` / `ANTHROPIC_API_KEY` / Supabase keys 走 Vercel Env Vars；不进仓库 |
+| 密钥管理 | `NVIDIA_API_KEY` / `ANTHROPIC_API_KEY` / Postgres keys 走 Vercel Env Vars；不进仓库 |
 
 ---
 
@@ -448,7 +487,8 @@ V2 可以接 OpenTelemetry → Grafana Cloud / Highlight.io。
 | 可视化 | recharts | ^2 |
 | Diff | react-diff-viewer-continued | latest |
 | PDF | pdf-parse | latest |
-| DB | @supabase/supabase-js | ^2 |
+| DB Client | postgres (porsager/postgres) | ^3 |
+| Cache/RateLimit | ioredis | ^5 |
 | ID | nanoid | ^5 |
 | 工具 | clsx, tailwind-merge | latest |
 
@@ -460,4 +500,7 @@ V2 可以接 OpenTelemetry → Grafana Cloud / Highlight.io。
 - [ ] 是否需要 i18n 框架（V1 只有中文，可能直接硬编码字符串）
 - [ ] 是否做 Server-Side Rendering 缓存（落地页静态化 vs 动态）
 - [ ] 简历 PDF 解析失败率高时是否引入 Claude 自身的 PDF 输入能力（API 直接读 PDF）
-- [ ] Rate limit 用 Upstash Redis 还是 Vercel KV
+- [ ] VPS 厂商选型（Hetzner 性价比高但需海外卡 / 国内厂商需备案）
+- [ ] CI/CD 方案：GitHub Actions push → 服务器 `git pull && docker compose up -d --build` 即可，是否上 Watchtower 自动拉镜像
+- [ ] 镜像仓库：直接服务器本地构建 vs 推到 GHCR
+- [ ] 备份策略：postgres `pg_dump` 每日 cron + 异地存储
