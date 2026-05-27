@@ -30,7 +30,8 @@ flowchart TB
     end
 
     subgraph External["外部服务"]
-        Claude[Anthropic API<br/>Sonnet 4.6 / Haiku 4.5<br/>+ prompt caching]
+        NIM[NVIDIA NIM 默认<br/>Llama 3.3 70B<br/>OpenAI 兼容接口]
+        Claude[Anthropic API 备选<br/>Sonnet 4.6 / Haiku 4.5<br/>+ prompt caching]
         Supa[(Supabase<br/>Postgres + Storage)]
     end
 
@@ -39,7 +40,8 @@ flowchart TB
     API --> Parse
     API --> Orch
     Orch --> A1 & A2 & A3 & A4 & A5
-    A1 & A2 & A3 & A4 & A5 -->|stream chunks| Claude
+    A1 & A2 & A3 & A4 & A5 -->|stream chunks| NIM
+    A1 & A2 & A3 & A4 & A5 -.->|provider=claude 时| Claude
     API -->|可选: 持久化分享链接| Supa
     API -.->|流式 token| SSE
     SSE --> Viz
@@ -140,22 +142,69 @@ export const JDParserAgent = {
 - 失败自动重试 1 次（指数退避）；2 次仍失败则在 UI 上标红，但**不阻塞其他 Agent**
 - 单 Agent 超时 30s 强制取消
 
-### 5. 模型层 (Anthropic API)
+### 5. 模型层 (双 Provider 抽象)
 
-**模型选择策略：**
+V1 同时接入两家 Provider，默认 Llama（零成本 demo），可一键切到 Claude（高质量对照）。
 
-| Agent | 模型 | 理由 |
-|---|---|---|
-| JDParserAgent | Haiku 4.5 | 任务结构化、文本短，性价比最高 |
-| ResumeAnalystAgent | Sonnet 4.6 | 需要识别"亮点 vs 弱项"，需要判断力 |
-| MatchScorerAgent | Sonnet 4.6 | 多维度推理 |
-| RewriterAgent | Sonnet 4.6 | 创作质量决定 demo 观感 |
-| InterviewerAgent | Sonnet 4.6 | 需要从弱项反推问题，需要判断力 |
+**Provider 抽象：**
+
+```ts
+// lib/providers/index.ts
+export type ProviderName = 'llama' | 'claude'
+
+export const providers = {
+  llama: createOpenAICompatible({
+    baseURL: 'https://integrate.api.nvidia.com/v1',
+    apiKey: process.env.NVIDIA_API_KEY!,
+    name: 'nvidia-nim',
+  }),
+  claude: createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }),
+}
+
+export const models = {
+  llama: { default: 'meta/llama-3.3-70b-instruct' },
+  claude: { light: 'claude-haiku-4-5', heavy: 'claude-sonnet-4-6' },
+}
+```
+
+**Agent 端只声明"任务等级"，不绑定具体模型：**
+
+```ts
+const JDParserAgent = {
+  tier: 'light',   // 'light' | 'heavy'
+  ...
+}
+```
+
+编排器根据当前 `PROVIDER` 环境变量解析为具体模型：
+
+| Agent | Tier | Llama 模式 | Claude 模式 |
+|---|---|---|---|
+| JDParserAgent | light | llama-3.3-70b | haiku 4.5 |
+| ResumeAnalystAgent | heavy | llama-3.3-70b | sonnet 4.6 |
+| MatchScorerAgent | heavy | llama-3.3-70b | sonnet 4.6 |
+| RewriterAgent | heavy | llama-3.3-70b | sonnet 4.6 |
+| InterviewerAgent | heavy | llama-3.3-70b | sonnet 4.6 |
+
+Llama 模式下所有 Agent 用同一模型（NIM 免费额度限制下最经济）；Claude 模式保留 Haiku/Sonnet 分级。
+
+**Provider 切换方式（V1）：**
+- 环境变量 `PROVIDER=llama`（默认）或 `claude`
+- URL query 参数 `?provider=claude` 临时覆盖（用于面试现场对比展示）
+
+**配置（NVIDIA NIM）：**
+- Base URL：`https://integrate.api.nvidia.com/v1`
+- Model：`meta/llama-3.3-70b-instruct`
+- Temperature：0.3
+- 走 OpenAI 兼容接口，使用 `@ai-sdk/openai-compatible`
+
+**结构化输出策略：**
+- Claude：用原生 tool use / `streamObject`，schema 合规率 99%+
+- Llama (NIM)：用 `response_format: { type: "json_object" }` + 在 prompt 中强约束 + Zod 校验 + 失败重试 1 次。OpenAI-compatible JSON mode 在 NIM 上的稳定性需开发阶段实测，必要时降级为"prompt 内输出 JSON 块 + 正则提取"
 
 **Prompt Caching 策略：**
-- 每个 Agent 的 system prompt + few-shot 示例放在 cache 段（>1024 tokens 才命中）
-- 用户的 JD/简历放在 cache 段之后（每次都新）
-- 估算：冷启动一次完整分析 ~$0.04，缓存命中后 ~$0.012
+- Claude 模式：system prompt + few-shot 走 prompt caching（>1024 tokens 命中），冷启 ~$0.04，命中 ~$0.012
+- Llama (NIM) 模式：**不支持 caching**，但 NIM 免费额度内成本为 0；超额后转付费需另行评估
 
 ---
 
@@ -305,12 +354,13 @@ joblens/
               └─────────────────────────────┘
                   │                        │
                   ▼                        ▼
-        ┌──────────────────┐    ┌────────────────────┐
-        │ Anthropic API     │    │ Supabase            │
-        │ - Sonnet 4.6     │    │ - Postgres (shares) │
-        │ - Haiku 4.5      │    │ - Cron (cleanup)    │
-        │ - Prompt caching │    │                     │
-        └──────────────────┘    └────────────────────┘
+     ┌────────────────────┐  ┌──────────────────┐  ┌────────────────────┐
+     │ NVIDIA NIM (默认)   │  │ Anthropic API     │  │ Supabase            │
+     │ - Llama 3.3 70B    │  │ (备选, ?provider= │  │ - Postgres (shares) │
+     │ - OpenAI 兼容       │  │  claude)          │  │ - Cron (cleanup)    │
+     │ - 免费额度          │  │ - Sonnet/Haiku   │  │                     │
+     └────────────────────┘  │ - Prompt caching │  └────────────────────┘
+                              └──────────────────┘
 ```
 
 **为什么 Vercel？**
@@ -332,8 +382,9 @@ joblens/
 | 冷启动首字节延迟 (TTFB) | < 800ms |
 | 首个 Agent 开始流式输出 | < 1.5s |
 | 全部 5 Agent 完成 | ≤ 15s (P50)，≤ 25s (P95) |
-| 一次完整分析 API 成本 (无缓存) | < $0.05 |
-| 一次完整分析 API 成本 (缓存命中) | < $0.015 |
+| 一次完整分析 API 成本 — Llama (NIM) 模式 | $0（免费额度内），超额后按 NIM 付费定价 |
+| 一次完整分析 API 成本 — Claude 无缓存 | < $0.05 |
+| 一次完整分析 API 成本 — Claude 缓存命中 | < $0.015 |
 | Vercel 月度费用 (Demo 期 ≤ 1000 次/月) | $0 (Hobby) |
 | Supabase 月度费用 (Demo 期) | $0 (Free tier) |
 
@@ -377,7 +428,7 @@ V2 可以接 OpenTelemetry → Grafana Cloud / Highlight.io。
 | API 滥用防护 | IP-based rate limit (Upstash Redis / Vercel KV)：10 次/小时/IP |
 | Prompt injection | 用户输入用明确分隔符包裹 (`<jd>...</jd>`)；system prompt 加防御指令；输出校验剔除可疑指令 |
 | 第三方 (Anthropic) 隐私 | 首页明确告知"内容会发送给 Anthropic 用于推理，不会用于训练"（引用 Anthropic 政策） |
-| 密钥管理 | `ANTHROPIC_API_KEY` / Supabase keys 走 Vercel Env Vars；不进仓库 |
+| 密钥管理 | `NVIDIA_API_KEY` / `ANTHROPIC_API_KEY` / Supabase keys 走 Vercel Env Vars；不进仓库 |
 
 ---
 
@@ -390,7 +441,8 @@ V2 可以接 OpenTelemetry → Grafana Cloud / Highlight.io。
 | 样式 | tailwindcss | ^4 |
 | 组件 | @radix-ui/* (via shadcn) | latest |
 | AI SDK | ai (Vercel AI SDK) | ^4 |
-| AI Provider | @ai-sdk/anthropic | latest |
+| AI Provider (默认) | @ai-sdk/openai-compatible | latest |
+| AI Provider (备选) | @ai-sdk/anthropic | latest |
 | Schema | zod | ^3 |
 | 状态 | zustand | ^5 |
 | 可视化 | recharts | ^2 |
