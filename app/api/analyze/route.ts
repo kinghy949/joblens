@@ -124,9 +124,9 @@ async function runAgent<I, O>(
       summary: {
         status: 'done',
         duration_ms: Date.now() - t0,
-        // NIM sometimes doesn't report usage; coerce nullish → undefined
-        tokens_in: usage.promptTokens ?? undefined,
-        tokens_out: usage.completionTokens ?? undefined,
+        // NIM sometimes returns null OR NaN; coerce both to undefined
+        tokens_in: cleanNumber(usage.promptTokens),
+        tokens_out: cleanNumber(usage.completionTokens),
       },
       data: final,
       status: 'done',
@@ -141,6 +141,11 @@ async function runAgent<I, O>(
       error: message,
     }
   }
+}
+
+function cleanNumber(n: number | null | undefined): number | undefined {
+  if (n === null || n === undefined) return undefined
+  return Number.isFinite(n) ? n : undefined
 }
 
 function jsonError(

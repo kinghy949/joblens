@@ -1,7 +1,41 @@
 {
-  "frozen_at": "2026-05-28T12:00:00Z",
-  "source": "orchestrator real-LLM run",
-  "provider": "llama",
+  "schema_version": "1.0.0",
+  "trace_id": "D8ZdZTCx8u-c",
+  "started_at": 1779957657373,
+  "input": {
+    "jd_text": "# 高级后端工程师 · LLM 应用方向（示例 JD）\n\n\n\n---\n\n## 公司\n\n某新锐 AI SaaS 公司（B 轮，团队 60 人），主攻面向企业的智能客服与知识检索产品。\n\n## 岗位职责\n\n1. 负责公司核心 LLM 应用后端服务的设计与开发，包括对话编排、检索增强（RAG）、工具调用等关键链路\n2. 主导高并发场景下的系统稳定性建设，参与设计支撑日均千万级请求的服务架构\n3. 与算法团队协作，将研究成果工程化落地，把模型能力变成可上线的产品功能\n4. 带领 2-3 人小组完成模块级开发任务，对模块质量、进度、技术债务负责\n5. 参与技术选型决策，对线上事故有 ownership，参与值班 oncall\n\n## 任职要求\n\n**硬技能（必备）**\n- 3 年以上后端开发经验，精通 Python（FastAPI / Django 任一）\n- 熟悉分布式系统设计，理解 CAP、一致性、最终一致性、分布式锁等概念\n- 熟悉至少一种主流消息队列（Kafka / RabbitMQ / Pulsar）\n- 熟悉 Kubernetes，能独立完成服务部署、监控、问题排查\n- 熟悉 Postgres 或 MySQL，理解索引设计、查询优化、读写分离\n- 有 LLM 应用（RAG / Agent / Function Calling）相关的工程化经验\n\n**软技能与加分项**\n- 有带 2-3 人小组的经验（\"leader experience\"）\n- 有从 0 到 1 设计并上线核心服务的完整经历\n- 能在跨职能团队（产品/算法/前端）中有效沟通，推动事项落地\n- 加分：开源项目贡献、技术博客、相关领域论文\n- 加分：熟悉向量数据库（Qdrant / Milvus / pgvector）\n- 加分：熟悉 Anthropic / OpenAI / 国产大模型 API 的工程实践\n\n## 我们提供\n\n- 有竞争力的薪酬 + 期权\n- 灵活办公（每周 2 天 WFH）\n- 直接接触公司最核心的技术决策",
+    "resume_text": "# 张某 · 后端工程师（示例简历）\n\n\n\n---\n\n## 个人信息\n\n- 姓名：张某\n- 工作年限：3 年\n- 邮箱：zhang.demo@example.com\n- 城市：上海\n\n## 教育背景\n\n- **某 211 大学** · 计算机科学与技术 · 本科 · 2018-2022\n\n## 工作经历\n\n### 某电商公司 · 后端工程师 · 2022.07 – 至今\n\n负责订单交易链路的后端开发与维护。\n\n- 负责后端开发，使用 Python 完成 API\n- 参与订单系统的重构，把老的单体服务拆成几个微服务\n- 用 Redis 做缓存，提升了接口性能\n- 处理一些线上 bug，写过几个内部工具脚本\n- 协调测试和前端，推动需求按时上线\n\n### 某创业公司 · 后端实习生 · 2021.06 – 2022.06\n\n- 负责一个内部管理系统的后端，技术栈是 Django + MySQL\n- 写了一些数据导出脚本\n- 帮助前端调试接口\n\n## 项目经历\n\n### 订单系统重构（公司项目）\n\n- 把老系统的下单链路拆开，分成订单服务、库存服务、支付服务\n- 接入了 RabbitMQ 做异步消息\n- 部署在 k8s 集群上\n- 上线后接口性能有提升\n\n### 内部数据看板（个人项目）\n\n- 用 FastAPI + Vue 写的一个内部用的数据展示页\n- 数据从 Postgres 取，做了一些聚合\n\n## 技术栈\n\nPython、FastAPI、Django、MySQL、Postgres、Redis、RabbitMQ、Docker、Kubernetes、Git、Linux\n\n## 自我评价\n\n- 责任心强，能够独立完成被分配的任务\n- 学习能力较好，对新技术保持兴趣\n- 有良好的团队合作精神",
+    "locale": "zh",
+    "provider": "llama",
+    "is_demo": true
+  },
+  "agent_runs": {
+    "jd-parser": {
+      "status": "done",
+      "started_at": 1779957657373,
+      "ended_at": 1779957658873
+    },
+    "resume-analyst": {
+      "status": "done",
+      "started_at": 1779957657373,
+      "ended_at": 1779957659673
+    },
+    "match-scorer": {
+      "status": "done",
+      "started_at": 1779957659673,
+      "ended_at": 1779957661473
+    },
+    "rewriter": {
+      "status": "done",
+      "started_at": 1779957661473,
+      "ended_at": 1779957662973
+    },
+    "interviewer": {
+      "status": "done",
+      "started_at": 1779957661473,
+      "ended_at": 1779957662973
+    }
+  },
   "jd_struct": {
     "role_title": "高级后端工程师 - LLM 应用方向",
     "seniority": "senior",
