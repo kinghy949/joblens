@@ -1,3 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect --
+ * This component intentionally reads sessionStorage and fires a one-shot
+ * fetch from inside useEffect; the setState calls happen pre-fetch (input
+ * validation) and post-fetch (response), both correct uses. */
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
@@ -58,12 +62,15 @@ export function AnalysisRunner() {
   const [elapsed, setElapsed] = useState(0)
   const [traceId, setTraceId] = useState<string | null>(null)
   const [fatalError, setFatalError] = useState<string | null>(null)
-  const startedAt = useRef(Date.now())
+  const startedAt = useRef<number | null>(null)
   const fired = useRef(false)
 
   /* tick the elapsed clock */
   useEffect(() => {
-    const id = setInterval(() => setElapsed(Date.now() - startedAt.current), 200)
+    if (startedAt.current === null) startedAt.current = Date.now()
+    const id = setInterval(() => {
+      if (startedAt.current !== null) setElapsed(Date.now() - startedAt.current)
+    }, 200)
     return () => clearInterval(id)
   }, [])
 

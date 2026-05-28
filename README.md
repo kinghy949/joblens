@@ -1,5 +1,7 @@
 # JobLens
 
+[![CI](https://github.com/kinghy949/joblens/actions/workflows/ci.yml/badge.svg)](https://github.com/kinghy949/joblens/actions/workflows/ci.yml)
+
 一个面向求职者的 AI 简历优化工作台 —— 多 Agent 协作，把"一份简历 + 一个 JD"快速拆解为可执行的优化建议。
 
 > 🚧 V1 开发中，目标 2026-07 初上线 demo。

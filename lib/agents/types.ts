@@ -35,7 +35,10 @@ export async function collectAgentRun<T>(
   result: AgentStreamResult<T>,
 ): Promise<{ final: T; partials: number; usage: Awaited<AgentStreamResult<T>['usage']> }> {
   let count = 0
-  for await (const _ of result.partialObjectStream) count++
+  for await (const _partial of result.partialObjectStream) {
+    void _partial
+    count++
+  }
   const final = await result.object
   const usage = await result.usage
   return { final, partials: count, usage }

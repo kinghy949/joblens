@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import {
   JDParserInput,
   JDStruct,
-  ResumeAnalystInput,
   ResumeStruct,
   MatchScores,
   AnalysisContext,

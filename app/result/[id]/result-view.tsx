@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { RadarChart } from '@/components/radar-chart'
 
 type StoredResult = {
@@ -23,22 +23,21 @@ type StoredResult = {
   } | null
 }
 
-export function ResultView() {
-  const [data, setData] = useState<StoredResult | null>(null)
-  const [missing, setMissing] = useState(false)
+type LoadState = { data: StoredResult; missing: false } | { data: null; missing: boolean }
 
-  useEffect(() => {
-    const raw = sessionStorage.getItem('joblens.analyze.result')
-    if (!raw) {
-      setMissing(true)
-      return
-    }
-    try {
-      setData(JSON.parse(raw) as StoredResult)
-    } catch {
-      setMissing(true)
-    }
-  }, [])
+function loadFromSession(): LoadState {
+  if (typeof window === 'undefined') return { data: null, missing: false }
+  const raw = sessionStorage.getItem('joblens.analyze.result')
+  if (!raw) return { data: null, missing: true }
+  try {
+    return { data: JSON.parse(raw) as StoredResult, missing: false }
+  } catch {
+    return { data: null, missing: true }
+  }
+}
+
+export function ResultView() {
+  const [{ data, missing }] = useState<LoadState>(loadFromSession)
 
   if (missing) {
     return (
