@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JobLens - 落地页</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed": "#e2e2e2",
+                      "on-secondary-container": "#63646c",
+                      "error-container": "#ffdad6",
+                      "on-primary-fixed": "#1c1b1b",
+                      "secondary-container": "#e3e1ec",
+                      "tertiary-fixed-dim": "#c6c6c7",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f3f3f6",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed-variant": "#474646",
+                      "background": "#f9f9fc",
+                      "on-surface-variant": "#444748",
+                      "primary": "#000000",
+                      "on-background": "#1a1c1e",
+                      "surface-dim": "#dadadd",
+                      "inverse-surface": "#2f3033",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-container": "#838484",
+                      "primary-fixed": "#e5e2e1",
+                      "on-error": "#ffffff",
+                      "surface": "#f9f9fc",
+                      "secondary-fixed": "#e3e1ec",
+                      "surface-container": "#eeedf0",
+                      "secondary-fixed-dim": "#c6c5cf",
+                      "on-primary": "#ffffff",
+                      "surface-container-high": "#e8e8eb",
+                      "surface-variant": "#e2e2e5",
+                      "surface-bright": "#f9f9fc",
+                      "on-surface": "#1a1c1e",
+                      "tertiary-container": "#1a1c1c",
+                      "on-secondary-fixed": "#1a1b22",
+                      "secondary": "#5d5e66",
+                      "on-tertiary-fixed-variant": "#454747",
+                      "on-primary-container": "#858383",
+                      "error": "#ba1a1a",
+                      "outline": "#747878",
+                      "inverse-primary": "#c9c6c5",
+                      "surface-tint": "#5f5e5e",
+                      "surface-container-highest": "#e2e2e5",
+                      "inverse-on-surface": "#f0f0f3",
+                      "tertiary": "#000000",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "on-tertiary-fixed": "#1a1c1c",
+                      "on-secondary-fixed-variant": "#46464e",
+                      "outline-variant": "#c4c7c7",
+                      "on-error-container": "#93000a",
+                      "primary-container": "#1c1b1b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-max": "1200px",
+                      "margin-desktop": "48px",
+                      "gutter": "24px",
+                      "base": "4px",
+                      "margin-mobile": "16px",
+                      "stack-lg": "32px",
+                      "stack-sm": "8px",
+                      "stack-md": "16px"
+              },
+              "fontFamily": {
+                      "label-sm": [
+                              "Inter, PingFang SC"
+                      ],
+                      "body-md": [
+                              "Inter, PingFang SC"
+                      ],
+                      "headline-md": [
+                              "Inter, PingFang SC"
+                      ],
+                      "title-lg": [
+                              "Inter, PingFang SC"
+                      ],
+                      "label-md": [
+                              "Inter, PingFang SC"
+                      ],
+                      "headline-lg": [
+                              "Inter, PingFang SC"
+                      ],
+                      "body-lg": [
+                              "Inter, PingFang SC"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter, PingFang SC"
+                      ],
+                      "display": [
+                              "Inter, PingFang SC"
+                      ]
+              },
+              "fontSize": {
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "14px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "letterSpacing": "-0.015em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "title-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "26px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.015em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "22px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'PingFang SC', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        /* Mobile specific typography overrides for the prompt requirements */
+        .mobile-hero-h1 { font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -0.02em; }
+        .mobile-hero-sub { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.015em; color: #444748; }
+        .mobile-hero-desc { font-size: 16px; line-height: 24px; color: #5d5e66; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col pb-24 md:pb-0">
+<!-- TopNavBar (Mobile Logo-only state) -->
+<header class="bg-surface dark:bg-on-primary-fixed docked full-width top-0 h-16 border-b border-outline-variant flat no shadows sticky top-0 w-full z-50 px-margin-mobile flex justify-between items-center md:hidden">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-on-primary cursor-pointer active:opacity-80">
+            JobLens
+        </div>
+<div class="flex items-center gap-4">
+<button class="font-label-md text-label-md font-medium text-primary bg-transparent border border-outline-variant px-4 py-2 rounded">
+                登录
+            </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col px-margin-mobile pt-8 pb-16 gap-stack-lg max-w-[375px] mx-auto w-full">
+<!-- Hero Section -->
+<section class="flex flex-col gap-6 text-left">
+<h1 class="mobile-hero-h1">
+                数据驱动<br/>简历优化
+            </h1>
+<h2 class="mobile-hero-sub">
+                AI 驱动的精准匹配分析
+            </h2>
+<p class="mobile-hero-desc">
+                上传您的简历与目标职位描述，JobLens 将通过深度学习模型进行对比分析，为您提供基于数据的修改建议，提升简历通过率。
+            </p>
+<!-- CTAs -->
+<div class="flex flex-col gap-4 mt-2">
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-body-md text-body-md font-medium flex justify-center items-center gap-2 active:scale-95 transition-transform">
+                    开始分析
+                    <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="w-full bg-surface-container-lowest text-primary border border-outline-variant py-3 rounded-lg font-body-md text-body-md font-medium flex justify-center items-center gap-2 active:bg-surface-container-low transition-colors">
+                    查看示例
+                </button>
+</div>
+</section>
+<!-- Demo Video Placeholder -->
+<section class="w-full aspect-video bg-surface-container-low border border-outline-variant rounded-lg flex items-center justify-center relative overflow-hidden group mt-4">
+<img alt="Dashboard preview showing data analytics and charts" class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-multiply" data-alt="A clean, modern dashboard interface displayed on a monitor, featuring minimalist data visualization charts and clean typography. The environment is bright and professional, characterized by soft white lighting and a high-key aesthetic. The color palette revolves around stark whites, subtle grays, and precise black line work, conveying analytical precision and reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZO6eR0icyTKxqjvUGaNMn_cddSbPu9tsPN7wG6bB-vywxlpGc74tZWsmQ_2QjBSLzGgz9YlITHyfFSwoXDcQ_ztOk8TXJ_oEx529piVG7l75b-88_DLooh20zSnPHFViY46SBDtticxeajOuWsbXorSAMzyUcwumshhOrlhWhxdk4S22DmJ3DU4MfqXtdI5Izl3GDZEkgdhnFvoCs-hDHqVdpCguZYIgFDamM20_CA0GvQ8TilpnuXrp1ygZEfFE9uE7tA-NGhcM"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-on-primary" data-icon="play_arrow" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+</section>
+<!-- Value Prop Section -->
+<section class="flex flex-col gap-8 mt-8">
+<div class="flex flex-col gap-3">
+<div class="w-10 h-10 bg-surface-container-high rounded flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary" data-icon="document_scanner">document_scanner</span>
+</div>
+<h3 class="font-headline-md text-headline-md font-semibold">深度解析</h3>
+<p class="font-body-md text-body-md text-secondary">
+                    突破关键词匹配局限，深度理解上下文语境与专业技能要求。
+                </p>
+</div>
+<div class="flex flex-col gap-3">
+<div class="w-10 h-10 bg-surface-container-high rounded flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary" data-icon="insights">insights</span>
+</div>
+<h3 class="font-headline-md text-headline-md font-semibold">客观反馈</h3>
+<p class="font-body-md text-body-md text-secondary">
+                    摒弃主观臆断，提供基于真实职位数据的量化优化建议。
+                </p>
+</div>
+</section>
+</main>
+<!-- Footer (Mobile Minimal) -->
+<footer class="bg-surface dark:bg-on-primary-fixed full-width py-stack-md border-t border-outline-variant flat no shadows mt-auto">
+<div class="w-full flex flex-col items-center gap-4 px-margin-mobile">
+<div class="font-label-md text-label-md font-bold text-primary dark:text-on-primary">
+                JobLens
+            </div>
+<div class="flex gap-6">
+<span class="font-label-md text-label-md text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-primary underline cursor-pointer">GitHub</span>
+<span class="font-label-md text-label-md text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-primary underline cursor-pointer">隐私</span>
+<span class="font-label-md text-label-md text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-primary underline cursor-pointer">联系</span>
+</div>
+<div class="font-label-md text-label-md text-secondary dark:text-on-secondary-container mt-2">
+                © 2024 JobLens AI. All rights reserved.
+            </div>
+</div>
+</footer>
+</body></html>

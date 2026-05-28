@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JobLens - 分析中</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed": "#e2e2e2",
+                      "on-secondary-container": "#63646c",
+                      "error-container": "#ffdad6",
+                      "on-primary-fixed": "#1c1b1b",
+                      "secondary-container": "#e3e1ec",
+                      "tertiary-fixed-dim": "#c6c6c7",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f3f3f6",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed-variant": "#474646",
+                      "background": "#f9f9fc",
+                      "on-surface-variant": "#444748",
+                      "primary": "#000000",
+                      "on-background": "#1a1c1e",
+                      "surface-dim": "#dadadd",
+                      "inverse-surface": "#2f3033",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-container": "#838484",
+                      "primary-fixed": "#e5e2e1",
+                      "on-error": "#ffffff",
+                      "surface": "#f9f9fc",
+                      "secondary-fixed": "#e3e1ec",
+                      "surface-container": "#eeedf0",
+                      "secondary-fixed-dim": "#c6c5cf",
+                      "on-primary": "#ffffff",
+                      "surface-container-high": "#e8e8eb",
+                      "surface-variant": "#e2e2e5",
+                      "surface-bright": "#f9f9fc",
+                      "on-surface": "#1a1c1e",
+                      "tertiary-container": "#1a1c1c",
+                      "on-secondary-fixed": "#1a1b22",
+                      "secondary": "#5d5e66",
+                      "on-tertiary-fixed-variant": "#454747",
+                      "on-primary-container": "#858383",
+                      "error": "#ba1a1a",
+                      "outline": "#747878",
+                      "inverse-primary": "#c9c6c5",
+                      "surface-tint": "#5f5e5e",
+                      "surface-container-highest": "#e2e2e5",
+                      "inverse-on-surface": "#f0f0f3",
+                      "tertiary": "#000000",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "on-tertiary-fixed": "#1a1c1c",
+                      "on-secondary-fixed-variant": "#46464e",
+                      "outline-variant": "#c4c7c7",
+                      "on-error-container": "#93000a",
+                      "primary-container": "#1c1b1b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-max": "1200px",
+                      "margin-desktop": "48px",
+                      "gutter": "24px",
+                      "base": "4px",
+                      "margin-mobile": "16px",
+                      "stack-lg": "32px",
+                      "stack-sm": "8px",
+                      "stack-md": "16px"
+              },
+              "fontFamily": {
+                      "label-sm": [
+                              "Inter, PingFang SC"
+                      ],
+                      "body-md": [
+                              "Inter, PingFang SC"
+                      ],
+                      "headline-md": [
+                              "Inter, PingFang SC"
+                      ],
+                      "title-lg": [
+                              "Inter, PingFang SC"
+                      ],
+                      "label-md": [
+                              "Inter, PingFang SC"
+                      ],
+                      "headline-lg": [
+                              "Inter, PingFang SC"
+                      ],
+                      "body-lg": [
+                              "Inter, PingFang SC"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter, PingFang SC"
+                      ],
+                      "display": [
+                              "Inter, PingFang SC"
+                      ]
+              },
+              "fontSize": {
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "14px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "letterSpacing": "-0.015em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "title-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "26px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.015em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "22px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes progress {
+            0% { width: 45%; }
+            100% { width: 55%; }
+        }
+        .animate-progress {
+            animation: progress 10s ease-in-out infinite alternate;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary selection:text-on-primary">
+<!-- Top Status Bar -->
+<header class="bg-surface sticky top-0 z-40 border-b border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop h-16 flex items-center justify-between">
+<!-- Left: Back & Breadcrumb -->
+<div class="flex items-center gap-stack-sm text-secondary">
+<button class="p-2 -ml-2 rounded-full hover:bg-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]" data-icon="arrow_back">arrow_back</span>
+</button>
+<span class="font-body-md text-body-md font-medium text-on-surface">分析中</span>
+</div>
+<!-- Center: Progress Text & Bar -->
+<div class="hidden md:flex flex-col items-center justify-center flex-1 max-w-[400px]">
+<div class="font-label-md text-label-md text-on-surface-variant mb-1.5 flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px] text-primary" data-icon="sync">sync</span>
+<span>分析中 · 已用 <span class="font-mono text-primary font-medium" id="elapsed-time">8</span> 秒 · 预计还需 <span class="font-mono text-primary font-medium" id="eta-time">7</span> 秒</span>
+</div>
+<div class="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary animate-progress rounded-full" style="width: 50%;"></div>
+</div>
+</div>
+<!-- Right: Trace ID -->
+<div class="flex items-center">
+<div class="font-mono text-label-sm font-label-sm text-outline bg-surface-container py-1 px-2 rounded">
+                    trace_id: a8f3b2e9
+                </div>
+</div>
+</div>
+<!-- Mobile Center Progress (visible only on small screens) -->
+<div class="md:hidden px-margin-mobile pb-3">
+<div class="font-label-md text-label-md text-on-surface-variant mb-1.5 flex items-center justify-between">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] animate-spin" data-icon="sync">sync</span>
+<span>分析中</span>
+</div>
+<span>8s / ~15s</span>
+</div>
+<div class="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary animate-progress rounded-full" style="width: 50%;"></div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-stack-lg">
+<!-- Phase Indicator -->
+<section class="flex flex-wrap gap-stack-sm md:gap-stack-md justify-center items-center">
+<!-- Phase 1: Completed -->
+<div class="flex items-center gap-2 bg-surface-container-low border border-outline-variant rounded-full px-4 py-1.5 font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="check_circle">check_circle</span>
+<span>阶段 1: JD + 简历解析</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-outline-variant hidden sm:block" data-icon="arrow_right_alt">arrow_right_alt</span>
+<!-- Phase 2: In Progress -->
+<div class="flex items-center gap-2 bg-primary text-on-primary rounded-full px-4 py-1.5 font-label-md text-label-md font-medium shadow-sm">
+<span class="w-2 h-2 rounded-full bg-on-primary animate-pulse"></span>
+<span>阶段 2: 匹配评分</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-outline-variant hidden sm:block" data-icon="arrow_right_alt">arrow_right_alt</span>
+<!-- Phase 3: Pending -->
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant border-dashed rounded-full px-4 py-1.5 font-label-md text-label-md text-outline">
+<span class="material-symbols-outlined text-[16px]" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+<span>阶段 3: 改写 + 面试</span>
+</div>
+</section>
+<!-- Agent Grid -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mt-stack-md">
+<!-- Panel A: JD 解析 Agent (Completed) -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col min-h-[360px] overflow-hidden">
+<header class="h-14 px-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[18px]" data-icon="description">description</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface">JD 解析 Agent</h3>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-medium tracking-wider bg-surface-variant text-on-surface-variant border border-outline-variant">
+                        COMPLETED
+                    </span>
+</header>
+<div class="flex-1 p-4 bg-[#1E1E1E] text-[#D4D4D4] font-mono text-[13px] leading-relaxed overflow-y-auto">
+<div class="text-[#6A9955] mb-2">// 初始化 JD 解析模块... 完成.</div>
+<div class="mb-1">&gt; 提取职位要求: 高级前端工程师 (React/TypeScript)</div>
+<div class="mb-1">&gt; 分析核心职责...</div>
+<div class="pl-4 text-[#9CDCFE] mb-2">
+                        - 负责核心业务线前端架构设计<br/>
+                        - 性能优化与工程化建设<br/>
+                        - 跨部门协同落地复杂需求
+                    </div>
+<div class="mb-1">&gt; 提取关键技能标签...</div>
+<div class="pl-4 text-[#CE9178]">
+                        "React", "TypeScript", "Webpack/Vite", "前端架构", "性能优化", "Node.js (加分)"
+                    </div>
+<div class="mt-4 text-[#4EC9B0]">✓ 识别出 8 个硬技能要求，3 个软技能要求。</div>
+<div class="mt-2 text-[#C586C0]">等待下一步指令...</div>
+</div>
+<footer class="px-4 py-2 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between">
+<span class="font-mono text-[10px] text-outline">Model: gpt-4o-mini | Temp: 0.1</span>
+<span class="font-mono text-[10px] text-outline">耗时: 2.3s</span>
+</footer>
+</article>
+<!-- Panel B: 简历分析 Agent (In Progress) -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col min-h-[360px] overflow-hidden ring-1 ring-primary/10 shadow-sm relative">
+<div class="absolute top-0 left-0 w-full h-0.5 bg-primary overflow-hidden">
+<div class="h-full bg-primary-fixed-dim w-1/3 animate-[progress_1.5s_infinite_linear]"></div>
+</div>
+<header class="h-14 px-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[18px]" data-icon="person_search">person_search</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface">简历分析 Agent</h3>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-medium tracking-wider bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                        IN-PROGRESS
+                    </span>
+</header>
+<div class="flex-1 p-4 bg-[#1E1E1E] text-[#D4D4D4] font-mono text-[13px] leading-relaxed overflow-y-auto" id="resume-terminal">
+<div class="text-[#6A9955] mb-2">// 接收用户简历文件: resume_v3_final.pdf</div>
+<div class="mb-1">&gt; 正在执行文本提取与清洗... 完成.</div>
+<div class="mb-1">&gt; 正在解析简历结构...</div>
+<div class="pl-4 text-[#9CDCFE] mb-2">
+                        - 基础信息: 提取成功 (张三, 5年经验)<br/>
+                        - 教育背景: 提取成功 (2015-2019, 计算机科学)<br/>
+                        - 工作经历: 提取中... (发现 3 段经历)
+                    </div>
+<div class="mb-1">&gt; 深入分析最近一段工作经历 (A公司)...</div>
+<div class="pl-4 text-[#CE9178] mb-2">
+                        提取核心成就: "重构核心交易链路，首屏加载时间降低 40%..."
+                    </div>
+<div class="mt-2 flex items-center text-[#DCDCAA]">
+                        &gt; 提取技能栈并建立知识图谱<span class="inline-block w-2 h-4 bg-primary ml-1 cursor-blink"></span>
+</div>
+</div>
+<footer class="px-4 py-2 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between">
+<span class="font-mono text-[10px] text-outline">Model: claude-3-haiku | Temp: 0.2</span>
+<span class="font-mono text-[10px] text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] animate-spin" data-icon="sync">sync</span>
+                        处理中
+                    </span>
+</footer>
+</article>
+<!-- Panel C: 匹配打分 Agent (In Progress / Waiting for input) -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col min-h-[360px] overflow-hidden">
+<header class="h-14 px-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+<div class="flex items-center gap-3 opacity-70">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="troubleshoot">troubleshoot</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface">匹配打分 Agent</h3>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-medium tracking-wider bg-surface-container text-on-surface-variant border border-outline-variant">
+                        INITIALIZING
+                    </span>
+</header>
+<div class="flex-1 p-4 bg-[#1E1E1E] text-[#D4D4D4] font-mono text-[13px] leading-relaxed overflow-y-auto opacity-80">
+<div class="text-[#6A9955] mb-2">// 匹配引擎已就绪.</div>
+<div class="mb-1">&gt; 已接收 JD 解析结果 (Task ID: JD-892A).</div>
+<div class="mb-1 text-outline">&gt; 等待简历分析结果 (Dependency: Resume-Agent)...</div>
+<div class="mt-4 flex items-center gap-2 text-outline-variant">
+<span class="material-symbols-outlined text-[16px] animate-spin" data-icon="hourglass_empty">hourglass_empty</span>
+                        等待简历分析完成后开始打分...
+                    </div>
+</div>
+<footer class="px-4 py-2 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between opacity-70">
+<span class="font-mono text-[10px] text-outline">Model: gpt-4o | Temp: 0.0</span>
+<span class="font-mono text-[10px] text-outline">Status: Blocked</span>
+</footer>
+</article>
+<!-- Panel D: 改写 Agent (Waiting for Dependency) -->
+<article class="bg-surface-container-lowest border border-outline-variant border-dashed rounded-xl flex flex-col min-h-[360px] overflow-hidden opacity-50 grayscale">
+<header class="h-14 px-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-outline">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit_note">edit_note</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-outline">改写 Agent</h3>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-medium tracking-wider bg-transparent text-outline border border-outline-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="lock">lock</span>
+                        WAITING
+                    </span>
+</header>
+<div class="flex-1 p-4 bg-surface-container-lowest flex items-center justify-center flex-col gap-2">
+<span class="material-symbols-outlined text-[32px] text-outline-variant" data-icon="lock_clock">lock_clock</span>
+<span class="font-mono text-label-md text-outline">等待前置任务完成</span>
+</div>
+<footer class="px-4 py-2 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between">
+<span class="font-mono text-[10px] text-outline-variant">Model: Unassigned</span>
+</footer>
+</article>
+</section>
+<!-- Bottom Action -->
+<div class="flex justify-end mt-4">
+<button class="px-6 py-2 rounded-lg font-label-md text-label-md text-secondary hover:text-primary hover:bg-surface-variant transition-colors border border-transparent hover:border-outline-variant">
+                取消分析
+            </button>
+</div>
+</main>
+<script>
+        // Simple script to update timers
+        let elapsed = 8;
+        let eta = 7;
+        const elapsedEl = document.getElementById('elapsed-time');
+        const etaEl = document.getElementById('eta-time');
+
+        setInterval(() => {
+            elapsed++;
+            if(eta > 1) eta--;
+            if(elapsedEl) elapsedEl.innerText = elapsed;
+            if(etaEl) etaEl.innerText = eta;
+        }, 1000);
+
+        // Simulate typing in the terminal
+        const terminal = document.getElementById('resume-terminal');
+        const typingLines = [
+            "> 提取项目经验关键字...",
+            "  - React Hooks (高频)",
+            "  - Redux Toolkit",
+            "> 评估技术深度: P5/P6 边缘...",
+            "> 生成中间态 JSON..."
+        ];
+        
+        let lineIdx = 0;
+        setInterval(() => {
+            if(lineIdx < typingLines.length && terminal) {
+                const cursor = terminal.querySelector('.cursor-blink');
+                if(cursor && cursor.parentNode) {
+                    cursor.parentNode.removeChild(cursor);
+                }
+                
+                const newLine = document.createElement('div');
+                newLine.className = "mt-1 text-[#DCDCAA] font-mono";
+                newLine.innerHTML = `${typingLines[lineIdx]}<span class="inline-block w-2 h-4 bg-primary ml-1 cursor-blink"></span>`;
+                terminal.appendChild(newLine);
+                terminal.scrollTop = terminal.scrollHeight;
+                lineIdx++;
+            }
+        }, 3500);
+
+    </script>
+</body></html>

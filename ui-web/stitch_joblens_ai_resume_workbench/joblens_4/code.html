@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>分享链接已过期 - JobLens</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter,+PingFang+SC:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-secondary-container": "#63646c",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#1c1b1b",
+                        "secondary-container": "#e3e1ec",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f3f3f6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#474646",
+                        "background": "#f9f9fc",
+                        "on-surface-variant": "#444748",
+                        "primary": "#000000",
+                        "on-background": "#1a1c1e",
+                        "surface-dim": "#dadadd",
+                        "inverse-surface": "#2f3033",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#838484",
+                        "primary-fixed": "#e5e2e1",
+                        "on-error": "#ffffff",
+                        "surface": "#f9f9fc",
+                        "secondary-fixed": "#e3e1ec",
+                        "surface-container": "#eeedf0",
+                        "secondary-fixed-dim": "#c6c5cf",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#e8e8eb",
+                        "surface-variant": "#e2e2e5",
+                        "surface-bright": "#f9f9fc",
+                        "on-surface": "#1a1c1e",
+                        "tertiary-container": "#1a1c1c",
+                        "on-secondary-fixed": "#1a1b22",
+                        "secondary": "#5d5e66",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-primary-container": "#858383",
+                        "error": "#ba1a1a",
+                        "outline": "#747878",
+                        "inverse-primary": "#c9c6c5",
+                        "surface-tint": "#5f5e5e",
+                        "surface-container-highest": "#e2e2e5",
+                        "inverse-on-surface": "#f0f0f3",
+                        "tertiary": "#000000",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-secondary-fixed-variant": "#46464e",
+                        "outline-variant": "#c4c7c7",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#1c1b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1200px",
+                        "margin-desktop": "48px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "margin-mobile": "16px",
+                        "stack-lg": "32px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter, PingFang SC"],
+                        "body-md": ["Inter, PingFang SC"],
+                        "headline-md": ["Inter, PingFang SC"],
+                        "title-lg": ["Inter, PingFang SC"],
+                        "label-md": ["Inter, PingFang SC"],
+                        "headline-lg": ["Inter, PingFang SC"],
+                        "body-lg": ["Inter, PingFang SC"],
+                        "headline-lg-mobile": ["Inter, PingFang SC"],
+                        "display": ["Inter, PingFang SC"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+                        "title-lg": ["18px", { "lineHeight": "26px", "fontWeight": "500" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="sticky top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-16 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-gutter">
+<a class="font-headline-md text-headline-md font-bold text-primary" href="#">JobLens</a>
+<div class="hidden md:flex items-center gap-gutter">
+<a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">工作原理</a>
+<a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">GitHub</a>
+</div>
+</div>
+<div>
+<a class="font-body-md text-body-md text-primary font-medium hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">登录</a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile py-stack-lg">
+<div class="w-full max-w-[480px] text-center flex flex-col items-center gap-stack-lg">
+<!-- Icon -->
+<div class="w-24 h-24 rounded-full bg-surface-container-high flex items-center justify-center mb-stack-sm border border-outline-variant">
+<span class="material-symbols-outlined text-[48px] text-primary" data-icon="timer_off">timer_off</span>
+</div>
+<!-- Headers -->
+<div class="flex flex-col gap-stack-sm">
+<h1 class="font-display text-display text-primary">这份分析报告已过期</h1>
+<p class="font-body-lg text-body-lg text-secondary">
+                    为了保护简历隐私，所有分享链接 24 小时后自动从服务器删除。如果你想看到一份新的分析，可以再上传一次。
+                </p>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-stack-md w-full mt-stack-sm">
+<button class="w-full bg-primary text-on-primary font-title-lg text-title-lg py-3 px-6 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex items-center justify-center gap-2 group">
+                    分析一份新的
+                    <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<a class="w-full text-secondary hover:text-primary font-body-md text-body-md py-3 px-6 transition-colors flex items-center justify-center gap-2 group" href="#">
+<span class="material-symbols-outlined group-hover:-translate-x-1 transition-transform" data-icon="arrow_back">arrow_back</span>
+                    返回首页
+                </a>
+</div>
+<!-- Caption -->
+<p class="font-label-md text-label-md text-tertiary-container mt-stack-lg pt-stack-md border-t border-outline-variant w-full">
+                JobLens 不存储简历原文，只在分析完成后生成可分享的结构化报告。
+            </p>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto py-stack-md border-t border-outline-variant bg-surface gap-stack-md">
+<div class="font-label-md text-label-md font-bold text-primary">
+            © 2024 JobLens AI. All rights reserved.
+        </div>
+<div class="flex gap-gutter">
+<a class="font-label-md text-label-md text-secondary hover:text-primary underline cursor-pointer" href="#">GitHub</a>
+<a class="font-label-md text-label-md text-secondary hover:text-primary underline cursor-pointer" href="#">隐私</a>
+<a class="font-label-md text-label-md text-secondary hover:text-primary underline cursor-pointer" href="#">联系</a>
+</div>
+</footer>
+</body></html>

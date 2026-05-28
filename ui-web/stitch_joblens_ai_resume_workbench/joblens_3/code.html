@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>报告结果 - JobLens</title>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#e2e2e2",
+                    "on-secondary-container": "#63646c",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#1c1b1b",
+                    "secondary-container": "#e3e1ec",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "on-secondary": "#ffffff",
+                    "surface-container-low": "#f3f3f6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#474646",
+                    "background": "#f9f9fc",
+                    "on-surface-variant": "#444748",
+                    "primary": "#000000",
+                    "on-background": "#1a1c1e",
+                    "surface-dim": "#dadadd",
+                    "inverse-surface": "#2f3033",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-container": "#838484",
+                    "primary-fixed": "#e5e2e1",
+                    "on-error": "#ffffff",
+                    "surface": "#f9f9fc",
+                    "secondary-fixed": "#e3e1ec",
+                    "surface-container": "#eeedf0",
+                    "secondary-fixed-dim": "#c6c5cf",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#e8e8eb",
+                    "surface-variant": "#e2e2e5",
+                    "surface-bright": "#f9f9fc",
+                    "on-surface": "#1a1c1e",
+                    "tertiary-container": "#1a1c1c",
+                    "on-secondary-fixed": "#1a1b22",
+                    "secondary": "#5d5e66",
+                    "on-tertiary-fixed-variant": "#454747",
+                    "on-primary-container": "#858383",
+                    "error": "#ba1a1a",
+                    "outline": "#747878",
+                    "inverse-primary": "#c9c6c5",
+                    "surface-tint": "#5f5e5e",
+                    "surface-container-highest": "#e2e2e5",
+                    "inverse-on-surface": "#f0f0f3",
+                    "tertiary": "#000000",
+                    "primary-fixed-dim": "#c9c6c5",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "on-secondary-fixed-variant": "#46464e",
+                    "outline-variant": "#c4c7c7",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#1c1b1b"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1200px",
+                    "margin-desktop": "48px",
+                    "gutter": "24px",
+                    "base": "4px",
+                    "margin-mobile": "16px",
+                    "stack-lg": "32px",
+                    "stack-sm": "8px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter, PingFang SC"],
+                    "body-md": ["Inter, PingFang SC"],
+                    "headline-md": ["Inter, PingFang SC"],
+                    "title-lg": ["Inter, PingFang SC"],
+                    "label-md": ["Inter, PingFang SC"],
+                    "headline-lg": ["Inter, PingFang SC"],
+                    "body-lg": ["Inter, PingFang SC"],
+                    "headline-lg-mobile": ["Inter, PingFang SC"],
+                    "display": ["Inter, PingFang SC"]
+            },
+            "fontSize": {
+                    "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                    "title-lg": ["18px", {"lineHeight": "26px", "fontWeight": "500"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Custom utilities to enforce strict style guidance */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        /* No scrollbar for clean look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e2e5; /* surface-variant */
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md pb-32">
+<!-- TopNavBar -->
+<nav class="sticky top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-16 border-b border-outline-variant bg-surface">
+<div class="flex items-center gap-gutter">
+<a class="font-headline-md text-headline-md font-bold text-primary tracking-tight" href="#">JobLens</a>
+<div class="hidden md:flex items-center gap-stack-md">
+<a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors cursor-pointer" href="#">工作原理</a>
+<a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors cursor-pointer" href="#">GitHub</a>
+</div>
+</div>
+<div class="flex items-center gap-stack-sm">
+<button class="hidden md:flex items-center justify-center h-9 px-4 rounded-lg bg-surface-container-lowest border border-outline-variant text-primary font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px] mr-1">download</span> 下载 PDF
+            </button>
+<button class="hidden md:flex items-center justify-center h-9 px-4 rounded-lg bg-surface-container-lowest border border-outline-variant text-primary font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px] mr-1">share</span> 分享
+            </button>
+<div class="w-px h-4 bg-outline-variant mx-2 hidden md:block"></div>
+<button class="flex items-center justify-center h-9 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:opacity-90 transition-opacity">
+                登录
+            </button>
+</div>
+</nav>
+<main class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop w-full">
+<!-- 1. HERO SCORE SECTION -->
+<section class="min-h-[512px] flex items-center py-16 md:py-24 border-b border-outline-variant mb-12">
+<div class="w-full grid grid-cols-1 md:grid-cols-12 gap-gutter items-center">
+<!-- Left: Score -->
+<div class="md:col-span-7 flex flex-col items-center md:items-start text-center md:text-left">
+<div class="relative flex items-center justify-center w-48 h-48 rounded-full border border-outline-variant bg-surface-container-lowest mb-6">
+<svg class="absolute inset-0 w-full h-full" viewbox="0 0 100 100">
+<!-- Background track -->
+<circle cx="50" cy="50" fill="none" r="48" stroke="#e2e2e5" stroke-width="2"></circle>
+<!-- Progress arc (78%) -->
+<circle class="transition-all duration-1000 ease-out" cx="50" cy="50" fill="none" r="48" stroke="#000000" stroke-dasharray="301.59" stroke-dashoffset="66.35" stroke-width="4" transform="rotate(-90 50 50)"></circle>
+</svg>
+<div class="flex flex-col items-center z-10">
+<span class="font-display text-[72px] leading-none font-semibold text-primary tracking-tighter">78</span>
+</div>
+</div>
+<div class="flex items-center gap-3 mb-4">
+<span class="px-3 py-1 rounded-full border border-primary bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold tracking-wider uppercase">Grade B+</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">稳进面试，但需补强 LLM 项目叙述</h1>
+<p class="font-body-lg text-body-lg text-secondary max-w-lg">您的简历在基础技术栈匹配度较高，但在高级职位要求的系统设计和具体可量化指标上存在明显缺口。</p>
+</div>
+<!-- Right: Radar Chart -->
+<div class="md:col-span-5 flex justify-center md:justify-end mt-12 md:mt-0">
+<div class="w-full max-w-[320px] aspect-square relative bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex flex-col items-center justify-center">
+<span class="absolute top-4 left-4 font-label-sm text-label-sm text-secondary uppercase tracking-wider">能力图谱</span>
+<!-- Static SVG Radar Chart Representation -->
+<svg class="w-full h-full max-w-[240px]" viewbox="0 0 200 200">
+<!-- Grid -->
+<polygon fill="none" points="100,10 185.5,72 153,170 47,170 14.5,72" stroke="#e2e2e5" stroke-width="1"></polygon>
+<polygon fill="none" points="100,32.5 164,79 140,152.5 60,152.5 36,79" stroke="#e2e2e5" stroke-width="1"></polygon>
+<polygon fill="none" points="100,55 142.5,86 126.5,135 73.5,135 57.5,86" stroke="#e2e2e5" stroke-width="1"></polygon>
+<polygon fill="none" points="100,77.5 121.5,93 113.5,117.5 86.5,117.5 78.5,93" stroke="#e2e2e5" stroke-width="1"></polygon>
+<!-- Axes -->
+<line stroke="#e2e2e5" stroke-width="1" x1="100" x2="100" y1="100" y2="10"></line>
+<line stroke="#e2e2e5" stroke-width="1" x1="100" x2="185.5" y1="100" y2="72"></line>
+<line stroke="#e2e2e5" stroke-width="1" x1="100" x2="153" y1="100" y2="170"></line>
+<line stroke="#e2e2e5" stroke-width="1" x1="100" x2="47" y1="100" y2="170"></line>
+<line stroke="#e2e2e5" stroke-width="1" x1="100" x2="14.5" y1="100" y2="72"></line>
+<!-- Data Polygon (85, 72, 65, 80, 70) -->
+<!-- Top: 技术 85, Top-Right: 经验 72, Bottom-Right: 项目 65, Bottom-Left: 沟通 80, Top-Left: 亮点 70 -->
+<polygon fill="rgba(0,0,0,0.05)" points="100,23.5 161.5,79.8 134.4,145.5 58.2,156 40.1,80.4" stroke="#000000" stroke-linejoin="round" stroke-width="2"></polygon>
+<!-- Points -->
+<circle cx="100" cy="23.5" fill="#000000" r="3"></circle>
+<circle cx="161.5" cy="79.8" fill="#000000" r="3"></circle>
+<circle cx="134.4" cy="145.5" fill="#000000" r="3"></circle>
+<circle cx="58.2" cy="156" fill="#000000" r="3"></circle>
+<circle cx="40.1" cy="80.4" fill="#000000" r="3"></circle>
+<!-- Labels -->
+<text fill="#444748" font-family="Inter" font-size="10" font-weight="500" text-anchor="middle" x="100" y="5">技术 (85)</text>
+<text fill="#444748" font-family="Inter" font-size="10" font-weight="500" text-anchor="start" x="190" y="75">经验 (72)</text>
+<text fill="#444748" font-family="Inter" font-size="10" font-weight="500" text-anchor="middle" x="155" y="185">项目 (65)</text>
+<text fill="#444748" font-family="Inter" font-size="10" font-weight="500" text-anchor="middle" x="45" y="185">沟通 (80)</text>
+<text fill="#444748" font-family="Inter" font-size="10" font-weight="500" text-anchor="end" x="10" y="75">亮点 (70)</text>
+</svg>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. KEYWORD COVERAGE HEATMAP -->
+<section class="mb-16">
+<h2 class="font-headline-md text-headline-md text-primary mb-6">关键词覆盖 <span class="text-secondary font-body-md text-body-md font-normal ml-2">JD 18 个关键词，命中 13 个</span></h2>
+<div class="flex flex-col gap-6">
+<!-- Group: Hit -->
+<div>
+<h3 class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-3">强匹配 (已命中)</h3>
+<div class="flex flex-wrap gap-2">
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
+<span class="font-body-md text-body-md text-primary">Python</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
+<span class="font-body-md text-body-md text-primary">分布式</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
+<span class="font-body-md text-body-md text-primary">FastAPI</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
+<span class="font-body-md text-body-md text-primary">RabbitMQ</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
+<span class="font-body-md text-body-md text-primary">微服务</span>
+</div>
+</div>
+</div>
+<!-- Group: Warning -->
+<div>
+<h3 class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-3">弱相关 (需强化)</h3>
+<div class="flex flex-wrap gap-2">
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">warning</span>
+<span class="font-body-md text-body-md text-primary">k8s</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-outline-variant bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">warning</span>
+<span class="font-body-md text-body-md text-primary">Postgres</span>
+</div>
+</div>
+</div>
+<!-- Group: Missed -->
+<div>
+<h3 class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-3">核心缺失 (严重警告)</h3>
+<div class="flex flex-wrap gap-2">
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-error bg-error-container/20">
+<span class="material-symbols-outlined text-[14px] text-error">cancel</span>
+<span class="font-body-md text-body-md text-primary">RAG</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-error bg-error-container/20">
+<span class="material-symbols-outlined text-[14px] text-error">cancel</span>
+<span class="font-body-md text-body-md text-primary">LLM</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-error bg-error-container/20">
+<span class="material-symbols-outlined text-[14px] text-error">cancel</span>
+<span class="font-body-md text-body-md text-primary">Function Calling</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-error bg-error-container/20">
+<span class="material-symbols-outlined text-[14px] text-error">cancel</span>
+<span class="font-body-md text-body-md text-primary">向量数据库</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-error bg-error-container/20">
+<span class="material-symbols-outlined text-[14px] text-error">cancel</span>
+<span class="font-body-md text-body-md text-primary">leader</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. REWRITE SUGGESTIONS -->
+<section class="mb-16">
+<h2 class="font-headline-md text-headline-md text-primary mb-6">改写建议 <span class="text-secondary font-body-md text-body-md font-normal ml-2">按影响力排序，共 7 条</span></h2>
+<div class="flex flex-col gap-stack-md">
+<!-- Card 1 -->
+<div class="border border-outline-variant bg-surface-container-lowest rounded-lg overflow-hidden">
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-title-lg text-title-lg text-primary font-medium">重构高并发经验描述</h3>
+<span class="px-2 py-1 rounded border border-primary text-primary font-label-sm text-label-sm uppercase bg-surface">High Impact</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+<!-- Old -->
+<div class="p-4 rounded border border-outline-variant bg-surface-container-low/50 relative">
+<span class="absolute top-3 left-3 material-symbols-outlined text-error text-[18px]">close</span>
+<p class="font-body-md text-body-md text-secondary pl-8 line-through decoration-outline-variant">负责公司订单 API 的开发和维护，使用 Python 和 FastAPI。</p>
+</div>
+<!-- New -->
+<div class="p-4 rounded border-2 border-primary bg-surface-container-lowest relative shadow-sm">
+<span class="absolute top-3 left-3 material-symbols-outlined text-primary text-[18px]">check</span>
+<p class="font-body-md text-body-md text-primary pl-8 font-medium">主导设计高并发订单 API（Python/FastAPI），日均处理 200 万请求，核心接口 p99 延迟稳定在 &lt; 80ms。</p>
+</div>
+</div>
+<!-- Callout -->
+<div class="bg-surface-container p-4 border-l-2 border-primary">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary mt-0.5">lightbulb</span>
+<div>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider block mb-1">改写理由</span>
+<p class="font-body-md text-body-md text-primary">JD 强调“高并发场景经验”，原文缺乏具体的业务规模和性能指标。添加日均请求量和 p99 延迟数据能直观证明工程能力。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 (Collapsed state example visually) -->
+<div class="border border-outline-variant bg-surface-container-lowest rounded-lg p-6 opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-title-lg text-title-lg text-primary font-medium">补充 LLM 相关技术栈关键词</h3>
+<span class="px-2 py-1 rounded border border-outline-variant text-secondary font-label-sm text-label-sm uppercase">Medium Impact</span>
+</div>
+<p class="font-body-md text-body-md text-secondary mb-2">在您的“内部知识库”项目中，未提及具体使用的模型和框架。建议补充...</p>
+<button class="text-primary font-label-md text-label-md flex items-center hover:underline">展开查看详情 <span class="material-symbols-outlined text-[16px] ml-1">expand_more</span></button>
+</div>
+</div>
+</section>
+<!-- 4. INTERVIEW QUESTIONS -->
+<section class="mb-8">
+<h2 class="font-headline-md text-headline-md text-primary mb-6">可能面临的面试问题 <span class="text-secondary font-body-md text-body-md font-normal ml-2">基于您的简历缺口生成</span></h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Question 1 -->
+<div class="border border-outline-variant bg-surface-container-lowest rounded-lg p-6 flex flex-col h-full hover:border-primary transition-colors">
+<div class="flex items-center justify-between mb-4">
+<span class="px-2 py-1 rounded-md bg-surface-container-low border border-outline-variant font-label-sm text-label-sm text-secondary">系统设计</span>
+<div class="flex text-primary">
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px]">star</span>
+</div>
+</div>
+<h3 class="font-title-lg text-title-lg text-primary mb-3 font-medium">如果订单 API 的流量突然增加 10 倍，你的架构将如何应对？</h3>
+<p class="font-body-md text-body-md text-secondary mt-auto">考察高可用架构设计、降级限流策略及 FastAPI 在极端并发下的表现。</p>
+</div>
+<!-- Question 2 -->
+<div class="border border-outline-variant bg-surface-container-lowest rounded-lg p-6 flex flex-col h-full hover:border-primary transition-colors">
+<div class="flex items-center justify-between mb-4">
+<span class="px-2 py-1 rounded-md bg-surface-container-low border border-outline-variant font-label-sm text-label-sm text-secondary">技术深度</span>
+<div class="flex text-primary">
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px]">star</span>
+<span class="material-symbols-outlined text-[16px]">star</span>
+</div>
+</div>
+<h3 class="font-title-lg text-title-lg text-primary mb-3 font-medium">解释 RabbitMQ 中的死信队列应用场景，以及你们项目中是如何保证消息不丢失的？</h3>
+<p class="font-body-md text-body-md text-secondary mt-auto">针对您简历中提及的 MQ 技术点进行深挖，测试真实落地经验。</p>
+</div>
+<!-- Question 3 -->
+<div class="border border-outline-variant bg-surface-container-lowest rounded-lg p-6 flex flex-col h-full hover:border-primary transition-colors">
+<div class="flex items-center justify-between mb-4">
+<span class="px-2 py-1 rounded-md bg-surface-container-low border border-outline-variant font-label-sm text-label-sm text-secondary">AI/LLM</span>
+<div class="flex text-primary">
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+<span class="material-symbols-outlined text-[16px] icon-fill">star</span>
+</div>
+</div>
+<h3 class="font-title-lg text-title-lg text-primary mb-3 font-medium">了解过 RAG（检索增强生成）吗？如果要给现在的知识库系统引入 RAG，你会怎么设计？</h3>
+<p class="font-body-md text-body-md text-secondary mt-auto">JD 强需求，简历缺失。大概率会被问及以此判断学习能力和前瞻性。</p>
+</div>
+</div>
+</section>
+</main>
+<!-- 5. STICKY BOTTOM ACTION BAR -->
+<div class="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant px-margin-mobile md:px-margin-desktop py-4 z-50 shadow-[0_-4px_24px_rgba(0,0,0,0.02)]">
+<div class="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-2 text-secondary">
+<span class="material-symbols-outlined text-[18px]">timer</span>
+<span class="font-label-md text-label-md">本报告 24 小时后自动删除</span>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto">
+<button class="flex-1 md:flex-none flex items-center justify-center h-10 px-4 rounded-lg bg-surface-container-lowest border border-outline-variant text-primary font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                    下载 PDF
+                </button>
+<button class="flex-1 md:flex-none flex items-center justify-center h-10 px-4 rounded-lg bg-surface-container-lowest border border-outline-variant text-primary font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                    🔗 生成分享链接
+                </button>
+<button class="flex-[2] md:flex-none flex items-center justify-center h-10 px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-medium hover:opacity-90 transition-opacity">
+                    再分析一份 <span class="material-symbols-outlined text-[18px] ml-1">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>

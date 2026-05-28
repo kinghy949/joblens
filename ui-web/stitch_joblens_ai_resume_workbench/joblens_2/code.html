@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JobLens - 分析页</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-secondary-container": "#63646c",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#1c1b1b",
+                        "secondary-container": "#e3e1ec",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f3f3f6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#474646",
+                        "background": "#f9f9fc",
+                        "on-surface-variant": "#444748",
+                        "primary": "#000000",
+                        "on-background": "#1a1c1e",
+                        "surface-dim": "#dadadd",
+                        "inverse-surface": "#2f3033",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#838484",
+                        "primary-fixed": "#e5e2e1",
+                        "on-error": "#ffffff",
+                        "surface": "#f9f9fc",
+                        "secondary-fixed": "#e3e1ec",
+                        "surface-container": "#eeedf0",
+                        "secondary-fixed-dim": "#c6c5cf",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#e8e8eb",
+                        "surface-variant": "#e2e2e5",
+                        "surface-bright": "#f9f9fc",
+                        "on-surface": "#1a1c1e",
+                        "tertiary-container": "#1a1c1c",
+                        "on-secondary-fixed": "#1a1b22",
+                        "secondary": "#5d5e66",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-primary-container": "#858383",
+                        "error": "#ba1a1a",
+                        "outline": "#747878",
+                        "inverse-primary": "#c9c6c5",
+                        "surface-tint": "#5f5e5e",
+                        "surface-container-highest": "#e2e2e5",
+                        "inverse-on-surface": "#f0f0f3",
+                        "tertiary": "#000000",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-secondary-fixed-variant": "#46464e",
+                        "outline-variant": "#c4c7c7",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#1c1b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1200px",
+                        "margin-desktop": "48px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "margin-mobile": "16px",
+                        "stack-lg": "32px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter", "PingFang SC"],
+                        "body-md": ["Inter", "PingFang SC"],
+                        "headline-md": ["Inter", "PingFang SC"],
+                        "title-lg": ["Inter", "PingFang SC"],
+                        "label-md": ["Inter", "PingFang SC"],
+                        "headline-lg": ["Inter", "PingFang SC"],
+                        "body-lg": ["Inter", "PingFang SC"],
+                        "headline-lg-mobile": ["Inter", "PingFang SC"],
+                        "display": ["Inter", "PingFang SC"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+                        "title-lg": ["18px", { "lineHeight": "26px", "fontWeight": "500" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .8; }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col font-body-md">
+<!-- TopNavBar -->
+<nav class="bg-surface dark:bg-on-primary-fixed docked full-width top-0 h-16 border-b border-outline-variant flat no shadows sticky top-0 w-full z-50 flex justify-between items-center px-margin-desktop max-w-container-max mx-auto hidden md:flex">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-on-primary">
+            JobLens
+        </div>
+<div class="flex gap-gutter items-center">
+<a class="text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-primary transition-colors cursor-pointer active:opacity-80 font-body-md text-body-md" href="#">工作原理</a>
+<a class="text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-primary transition-colors cursor-pointer active:opacity-80 font-body-md text-body-md" href="#">GitHub</a>
+</div>
+<div>
+<button class="font-label-md text-label-md bg-surface border border-outline-variant text-primary px-4 py-2 rounded flex items-center justify-center hover:bg-surface-container-low transition-colors cursor-pointer active:opacity-80">登录</button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow max-w-container-max mx-auto w-full px-margin-mobile md:px-margin-desktop py-stack-lg mb-24">
+<!-- Header -->
+<header class="mb-stack-lg">
+<h1 class="text-[48px] font-semibold leading-tight tracking-tight mb-2 text-primary">开始分析</h1>
+<p class="font-body-lg text-body-lg text-secondary">粘贴一段 JD + 上传你的简历，AI 会在 15 秒内给出多维度报告。</p>
+</header>
+<!-- Two Columns -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-lg">
+<!-- Left Column: JD Input -->
+<div class="flex flex-col gap-stack-sm">
+<div class="font-label-sm text-label-sm tracking-widest text-secondary uppercase">
+                    JD · JOB DESCRIPTION
+                </div>
+<div class="relative bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden h-[480px] flex">
+<div class="w-10 bg-[#FAFAFA] border-r border-outline-variant flex flex-col items-center py-4 text-outline font-mono text-xs select-none">
+<span>1</span>
+<span>2</span>
+<span>3</span>
+<span>4</span>
+<span>5</span>
+</div>
+<textarea class="flex-grow p-4 bg-transparent border-none resize-none focus:ring-0 focus:outline-none font-mono text-sm leading-relaxed text-on-surface placeholder:text-outline-variant no-scrollbar" placeholder="把岗位 JD 粘贴到这里。例如：'我们正在招聘高级后端工程师...'"></textarea>
+</div>
+<div class="flex justify-between items-center px-1">
+<span class="font-label-sm text-label-sm text-secondary">0 / 8000 字</span>
+<button class="font-label-sm text-label-sm text-outline opacity-50 cursor-not-allowed border border-outline-variant px-2 py-1 rounded bg-surface">从 URL 抓取（V2）</button>
+</div>
+</div>
+<!-- Right Column: Resume Upload -->
+<div class="flex flex-col gap-stack-sm">
+<div class="font-label-sm text-label-sm tracking-widest text-secondary uppercase">
+                    简历 · RESUME
+                </div>
+<div class="h-[480px] border-[1.5px] border-dashed border-outline-variant rounded-lg bg-[#FAFAFA] flex flex-col items-center justify-center gap-4 hover:border-primary transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-[48px] text-secondary group-hover:text-primary transition-colors">cloud_upload</span>
+<div class="flex flex-col items-center gap-1">
+<span class="font-title-lg text-title-lg font-bold text-primary">把简历拖到这里</span>
+<span class="font-body-md text-body-md text-secondary">或点击选择文件 · 支持 PDF / MD / TXT · 最大 5MB</span>
+</div>
+</div>
+<div class="mt-4 p-4 border border-outline-variant rounded-lg bg-surface-container-lowest flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-12 bg-surface-variant border border-outline-variant flex items-center justify-center rounded-sm">
+<span class="material-symbols-outlined text-outline text-xl">description</span>
+</div>
+<span class="font-label-md text-label-md font-medium text-primary">示例简历</span>
+</div>
+<button class="font-label-md text-label-md text-primary border border-outline-variant px-3 py-1.5 rounded bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+                        用示例简历填入
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Action Bar -->
+<div class="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant h-[96px] z-40 hidden md:block">
+<div class="max-w-container-max mx-auto px-margin-desktop h-full flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1 bg-[#FAFAFA] border border-outline-variant px-2 py-1 rounded font-label-md text-label-md text-secondary">
+<span class="material-symbols-outlined text-[14px]">memory</span>
+                    Provider: Llama 3.3 (默认)
+                </span>
+<button class="font-label-md text-label-md text-outline hover:text-primary transition-colors underline decoration-outline hover:decoration-primary underline-offset-2">切换 Claude</button>
+</div>
+<div class="flex items-center gap-4">
+<button class="font-body-md text-body-md text-secondary hover:text-primary transition-colors px-4 py-2">
+                    用示例 JD + 简历一键体验
+                </button>
+<button class="bg-primary text-on-primary font-title-lg text-title-lg h-[56px] px-8 rounded flex items-center justify-center gap-2 hover:opacity-90 transition-opacity animate-pulse-subtle">
+                    开始分析
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- BottomNavBar Mobile -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile md:hidden bg-surface dark:bg-on-primary-fixed docked full-width bottom-0 h-24 border-t border-outline-variant flat no shadows">
+<div class="flex flex-col items-center justify-center bg-primary dark:bg-primary-fixed text-on-primary dark:text-on-primary-fixed rounded-lg px-4 py-1 scale-95 transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_document</span>
+<span class="font-label-sm text-label-sm">输入</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-container px-4 py-1 hover:bg-surface-container-high dark:hover:bg-on-primary-fixed-variant rounded-lg scale-95 transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-label-sm text-label-sm">分析</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-container px-4 py-1 hover:bg-surface-container-high dark:hover:bg-on-primary-fixed-variant rounded-lg scale-95 transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined">task_alt</span>
+<span class="font-label-sm text-label-sm">结果</span>
+</div>
+</nav>
+</body></html>
