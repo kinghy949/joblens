@@ -12,3 +12,4 @@ build/
 tsconfig.tsbuildinfo
 *.tsbuildinfo
 fixtures/.scores-cache.json
+fixtures/.last-orchestration.json
