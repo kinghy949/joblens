@@ -1,0 +1,17 @@
+.git
+.next
+node_modules
+backups
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+ui-web
+docs
+.claude
+.vscode
+.idea
+README.md
+LICENSE
+**/__tests__

@@ -1,0 +1,51 @@
+# JobLens · local dev compose
+#
+# Brings up postgres + redis for Week 2+ features (shared links, rate limit).
+# The Next.js app itself is intentionally NOT containerized for dev — running
+# `pnpm dev` on the host is much faster (no source-mount FS overhead) and
+# matches how 99% of work happens. This compose only stands up backing
+# services that the app talks to over localhost.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up -d
+#   pnpm dev   # in another terminal
+#
+# Production compose with the Next.js container + Caddy lives in
+# docs/deployment.md and will be lifted out to docker-compose.yml when we
+# actually deploy (Week 5+).
+
+name: joblens-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"  # exposed for host pnpm dev to connect
+    environment:
+      POSTGRES_USER: joblens
+      POSTGRES_PASSWORD: joblens
+      POSTGRES_DB: joblens
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U joblens -d joblens"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"  # exposed for host pnpm dev
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pg_data:
