@@ -1,7 +1,13 @@
+/* eslint-disable react-hooks/set-state-in-effect --
+ * Result view bootstraps by reading sessionStorage / fetching the share API
+ * once on mount. The setState calls live inside async callbacks or directly
+ * after sync IO; they are intentional and idempotent (the id dep + the
+ * router instance covers identity). */
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import { RadarChart } from '@/components/radar-chart'
 
 type Hit = 'strong' | 'weak' | 'missing'
@@ -70,29 +76,88 @@ type StoredResult = {
   questions?: InterviewQuestion[]
 }
 
-type LoadState = { data: StoredResult; missing: false } | { data: null; missing: boolean }
+type LoadState =
+  | { kind: 'loading' }
+  | { kind: 'ready'; data: StoredResult; source: 'session' | 'shared' }
+  | { kind: 'not-found' }
+  | { kind: 'error'; message: string }
 
-function loadFromSession(): LoadState {
-  if (typeof window === 'undefined') return { data: null, missing: false }
+function loadFromSession(id: string): StoredResult | null {
+  if (typeof window === 'undefined') return null
   const raw = sessionStorage.getItem('joblens.analyze.result')
-  if (!raw) return { data: null, missing: true }
+  if (!raw) return null
   try {
-    return { data: JSON.parse(raw) as StoredResult, missing: false }
+    const parsed = JSON.parse(raw) as StoredResult
+    if (parsed.trace_id === id || id === 'latest') return parsed
+    return null
   } catch {
-    return { data: null, missing: true }
+    return null
   }
 }
 
-export function ResultView() {
-  const [{ data, missing }] = useState<LoadState>(loadFromSession)
+export function ResultView({ id }: { id: string }) {
+  const router = useRouter()
+  const [state, setState] = useState<LoadState>({ kind: 'loading' })
 
-  if (missing) {
+  useEffect(() => {
+    const local = loadFromSession(id)
+    if (local) {
+      setState({ kind: 'ready', data: local, source: 'session' })
+      return
+    }
+    if (id === 'latest') {
+      // expected but missing — user opened a stale link
+      setState({ kind: 'not-found' })
+      return
+    }
+    // fetch shared
+    void (async () => {
+      try {
+        const res = await fetch(`/api/result/${encodeURIComponent(id)}`)
+        if (res.status === 410) {
+          router.replace(`/result/${id}/expired`)
+          return
+        }
+        if (res.status === 404) {
+          setState({ kind: 'not-found' })
+          return
+        }
+        if (!res.ok) {
+          setState({ kind: 'error', message: `HTTP ${res.status}` })
+          return
+        }
+        const body = await res.json()
+        const ctx = body?.context
+        if (!ctx) {
+          setState({ kind: 'not-found' })
+          return
+        }
+        setState({
+          kind: 'ready',
+          data: { ...(ctx as StoredResult), trace_id: body.id ?? id },
+          source: 'shared',
+        })
+      } catch (err) {
+        setState({ kind: 'error', message: (err as Error).message })
+      }
+    })()
+  }, [id, router])
+
+  if (state.kind === 'loading') {
+    return (
+      <main className="flex flex-1 items-center justify-center px-6">
+        <p className="text-body-md text-foreground-variant">加载中…</p>
+      </main>
+    )
+  }
+
+  if (state.kind === 'not-found') {
     return (
       <main className="flex flex-1 items-center justify-center px-6">
         <div className="max-w-md text-center">
           <h1 className="text-headline-lg">没找到分析结果</h1>
           <p className="mt-3 text-body-md text-foreground-variant">
-            可能是因为你直接打开了这个链接 / 刷新了浏览器 / 关闭了标签页。
+            可能是因为：你直接打开了这个链接，或浏览器 sessionStorage 已被清空，或这个分享链接已被删除。
           </p>
           <Link
             href="/analyze"
@@ -104,18 +169,37 @@ export function ResultView() {
       </main>
     )
   }
-  if (!data) {
+
+  if (state.kind === 'error') {
     return (
       <main className="flex flex-1 items-center justify-center px-6">
-        <p className="text-body-md text-foreground-variant">加载中…</p>
+        <div className="max-w-md text-center">
+          <h1 className="text-headline-lg text-destructive">加载失败</h1>
+          <p className="mt-3 text-body-md text-foreground-variant">{state.message}</p>
+          <Link
+            href="/analyze"
+            className="mt-6 inline-flex h-12 items-center rounded bg-primary px-6 text-body-md font-medium text-primary-foreground"
+          >
+            重新分析 →
+          </Link>
+        </div>
       </main>
     )
   }
 
-  return <FullResult data={data} />
+  // ready
+  return <FullResult data={state.data} traceId={id} source={state.source} />
 }
 
-function FullResult({ data }: { data: StoredResult }) {
+function FullResult({
+  data,
+  traceId,
+  source,
+}: {
+  data: StoredResult
+  traceId: string
+  source: 'session' | 'shared'
+}) {
   const jd = data.jd_struct ?? {}
   const resume = data.resume_struct ?? {}
   const scores = data.scores
@@ -221,23 +305,7 @@ function FullResult({ data }: { data: StoredResult }) {
 
       {/* Action bar */}
       <section className="mx-auto max-w-container px-6 md:px-12">
-        <div className="flex items-center justify-between">
-          <span className="text-label-md text-foreground-variant">本报告 24 小时后自动删除</span>
-          <div className="flex items-center gap-3">
-            <button className="inline-flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-label-md text-foreground hover:bg-surface-container-low">
-              下载 PDF (V2)
-            </button>
-            <button className="inline-flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-label-md text-foreground hover:bg-surface-container-low">
-              🔗 生成分享链接 (V2)
-            </button>
-            <Link
-              href="/analyze"
-              className="inline-flex items-center gap-1.5 rounded bg-primary px-3 py-1.5 text-label-md font-medium text-primary-foreground hover:opacity-90"
-            >
-              再分析一份 →
-            </Link>
-          </div>
-        </div>
+        <ShareActionBar data={data} traceId={traceId} source={source} />
       </section>
 
       {/* Rewrites */}
@@ -248,17 +316,125 @@ function FullResult({ data }: { data: StoredResult }) {
       {/* Interview questions */}
       {questions.length > 0 && <Questions questions={questions} />}
 
-      <section className="mx-auto mt-12 max-w-container px-6 md:px-12">
-        <div className="flex items-center justify-between border-t border-outline-variant pt-6">
-          <span className="text-label-md text-foreground-variant">
-            trace_id: {data.trace_id ?? '—'}
-          </span>
-          <Link href="/analyze" className="text-label-md text-foreground underline-offset-2 hover:underline">
+    </main>
+  )
+}
+
+/* ---------- share action bar ---------- */
+
+type ShareState =
+  | { kind: 'idle' }
+  | { kind: 'creating' }
+  | { kind: 'created'; url: string; expires_at: string }
+  | { kind: 'error'; message: string }
+
+function ShareActionBar({
+  data,
+  traceId,
+  source,
+}: {
+  data: StoredResult
+  traceId: string
+  source: 'session' | 'shared'
+}) {
+  const [share, setShare] = useState<ShareState>(() =>
+    source === 'shared'
+      ? { kind: 'created', url: typeof window !== 'undefined' ? window.location.href : '', expires_at: '' }
+      : { kind: 'idle' },
+  )
+
+  async function generate() {
+    setShare({ kind: 'creating' })
+    try {
+      /* strip is_demo so a demo run never produces a confusing public link */
+      const payload = { ...data }
+      delete (payload as { is_demo?: boolean }).is_demo
+
+      const res = await fetch('/api/result', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const body = await res.json()
+      if (!res.ok) {
+        setShare({ kind: 'error', message: body?.error?.message ?? `HTTP ${res.status}` })
+        return
+      }
+      const url = `${window.location.origin}/result/${body.id}`
+      try {
+        await navigator.clipboard.writeText(url)
+      } catch {
+        /* clipboard may not be available; user can still copy from the input below */
+      }
+      setShare({ kind: 'created', url, expires_at: body.expires_at })
+    } catch (err) {
+      setShare({ kind: 'error', message: (err as Error).message })
+    }
+  }
+
+  async function copyExisting(url: string) {
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {}
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-label-md text-foreground-variant">
+          {source === 'shared'
+            ? '你正在查看一个分享链接 · 24 小时后自动删除'
+            : '本报告仅存在你的浏览器；点"生成分享链接"才会存到服务器，24h 后自动删'}
+        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            disabled
+            className="inline-flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-label-md text-foreground-variant"
+          >
+            下载 PDF (V2)
+          </button>
+          {source === 'session' && (
+            <button
+              onClick={generate}
+              disabled={share.kind === 'creating'}
+              className="inline-flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-label-md text-foreground hover:bg-surface-container-low disabled:opacity-50"
+            >
+              {share.kind === 'creating' ? '生成中…' : '🔗 生成分享链接'}
+            </button>
+          )}
+          <Link
+            href="/analyze"
+            className="inline-flex items-center gap-1.5 rounded bg-primary px-3 py-1.5 text-label-md font-medium text-primary-foreground hover:opacity-90"
+          >
             再分析一份 →
           </Link>
         </div>
-      </section>
-    </main>
+      </div>
+
+      {share.kind === 'created' && (
+        <div className="flex items-center gap-2 rounded border border-success/30 bg-success/5 px-3 py-2 text-label-md">
+          <span className="text-success">✓</span>
+          <span className="text-foreground-variant">链接已生成并复制到剪贴板：</span>
+          <code className="flex-1 truncate rounded bg-surface-container-low px-2 py-0.5 font-mono text-foreground">
+            {share.url}
+          </code>
+          <button
+            onClick={() => copyExisting(share.url)}
+            className="rounded border border-outline-variant bg-surface-container-lowest px-2 py-0.5 text-label-sm text-foreground hover:bg-surface-container-low"
+          >
+            复制
+          </button>
+        </div>
+      )}
+
+      {share.kind === 'error' && (
+        <div className="rounded border border-destructive/40 bg-destructive/5 px-3 py-2 text-label-md text-destructive">
+          ✗ 生成失败：{share.message}
+        </div>
+      )}
+
+      <span className="text-label-sm text-foreground-variant">trace_id: {traceId}</span>
+    </div>
   )
 }
 
