@@ -125,9 +125,13 @@ export function AnalysisRunner() {
     }
 
     const url = isDemo ? '/api/analyze?demo=1' : '/api/analyze'
-    const controller = new AbortController()
 
-    runStream(url, payload, controller.signal, {
+    /* No AbortController here on purpose: React 19 dev strict mode re-runs
+     * effects, and aborting on cleanup would surface as "signal is aborted
+     * without reason" on remount. The stream is single-shot and lives at
+     * most ~140s, so we let it complete naturally even if the user navigates
+     * away. */
+    runStream(url, payload, {
       onEvent: (ev) => handleEvent(ev, setPanels, setPhase),
       onFinal: (context) => {
         sessionStorage.setItem(
@@ -141,8 +145,6 @@ export function AnalysisRunner() {
       },
       onError: (msg) => setFatalError(msg),
     })
-
-    return () => controller.abort()
   }, [isDemo, router])
 
   const allDone = AGENT_ORDER.every((a) => panels[a].state === 'done')
@@ -234,10 +236,15 @@ type StreamHandlers = {
   onError: (message: string) => void
 }
 
+function isAbortError(err: unknown): boolean {
+  if (!err) return false
+  const e = err as { name?: string }
+  return e.name === 'AbortError'
+}
+
 async function runStream(
   url: string,
   payload: PendingPayload,
-  signal: AbortSignal,
   handlers: StreamHandlers,
 ): Promise<void> {
   let res: Response
@@ -249,10 +256,9 @@ async function runStream(
         jd_text: payload.jd_text,
         resume_text: payload.resume_text,
       }),
-      signal,
     })
   } catch (err) {
-    handlers.onError((err as Error).message)
+    if (!isAbortError(err)) handlers.onError((err as Error).message)
     return
   }
 
@@ -279,7 +285,7 @@ async function runStream(
     try {
       chunk = await reader.read()
     } catch (err) {
-      if ((err as Error).name !== 'AbortError') handlers.onError((err as Error).message)
+      if (!isAbortError(err)) handlers.onError((err as Error).message)
       return
     }
     if (chunk.done) return
