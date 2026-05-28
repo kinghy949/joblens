@@ -1,0 +1,243 @@
+{
+  "frozen_at": "2026-05-28T03:46:03.993Z",
+  "source": "fixtures/demo-jd.md + fixtures/demo-resume.md",
+  "provider": "llama",
+  "jd_struct": {
+    "role_title": "高级后端工程师 - LLM 应用方向",
+    "seniority": "senior",
+    "hard_skills": [
+      {
+        "name": "Python",
+        "level": "required"
+      },
+      {
+        "name": "FastAPI",
+        "level": "required"
+      },
+      {
+        "name": "Django",
+        "level": "required"
+      },
+      {
+        "name": "分布式系统设计",
+        "level": "required"
+      },
+      {
+        "name": "CAP 一致性",
+        "level": "required"
+      },
+      {
+        "name": "最终一致性",
+        "level": "required"
+      },
+      {
+        "name": "分布式锁",
+        "level": "required"
+      },
+      {
+        "name": "Kafka",
+        "level": "required"
+      },
+      {
+        "name": "RabbitMQ",
+        "level": "required"
+      },
+      {
+        "name": "Pulsar",
+        "level": "required"
+      },
+      {
+        "name": "Kubernetes",
+        "level": "required"
+      },
+      {
+        "name": "Postgres",
+        "level": "required"
+      },
+      {
+        "name": "MySQL",
+        "level": "required"
+      },
+      {
+        "name": "LLM 应用",
+        "level": "required"
+      },
+      {
+        "name": "RAG",
+        "level": "required"
+      },
+      {
+        "name": "Agent",
+        "level": "required"
+      },
+      {
+        "name": "Function Calling",
+        "level": "required"
+      },
+      {
+        "name": "向量数据库",
+        "level": "bonus"
+      },
+      {
+        "name": "Qdrant",
+        "level": "bonus"
+      },
+      {
+        "name": "Milvus",
+        "level": "bonus"
+      }
+    ],
+    "soft_skills": [
+      "跨职能协作",
+      "领导力",
+      "沟通能力"
+    ],
+    "hidden_requirements": [
+      {
+        "requirement": "能带领 2-3 人小组完成模块级开发任务",
+        "evidence": "带领 2-3 人小组完成模块级开发任务，对模块质量、进度、技术债务负责"
+      },
+      {
+        "requirement": "能在跨职能团队中有效沟通",
+        "evidence": "能在跨职能团队（产品/算法/前端）中有效沟通，推动事项落地"
+      }
+    ],
+    "keywords": [
+      "Python",
+      "FastAPI",
+      "Django",
+      "分布式系统设计",
+      "CAP 一致性",
+      "最终一致性",
+      "分布式锁",
+      "Kafka",
+      "RabbitMQ",
+      "Pulsar",
+      "Kubernetes",
+      "Postgres",
+      "MySQL",
+      "LLM 应用",
+      "RAG",
+      "Agent",
+      "Function Calling",
+      "向量数据库",
+      "Qdrant",
+      "Milvus",
+      "Anthropic",
+      "OpenAI",
+      "国产大模型 API"
+    ],
+    "one_liner": "能独立完成高并发场景下的系统稳定性建设，带领小组完成模块级开发任务"
+  },
+  "resume_struct": {
+    "candidate_name": "张某",
+    "experience_years": 3,
+    "domain_tags": [
+      "后端",
+      "电商",
+      "微服务"
+    ],
+    "bullets": [
+      {
+        "id": "b1",
+        "company": "某电商公司",
+        "role": "后端工程师",
+        "text": "负责订单交易链路的后端开发与维护，使用 Python 完成 API",
+        "has_metrics": false
+      },
+      {
+        "id": "b2",
+        "company": "某电商公司",
+        "role": "后端工程师",
+        "text": "参与订单系统的重构，把老的单体服务拆成几个微服务",
+        "has_metrics": false
+      },
+      {
+        "id": "b3",
+        "company": "某电商公司",
+        "role": "后端工程师",
+        "text": "用 Redis 做缓存，提升了接口性能",
+        "has_metrics": false
+      },
+      {
+        "id": "b4",
+        "company": "某电商公司",
+        "role": "后端工程师",
+        "text": "处理一些线上 bug，写过几个内部工具脚本",
+        "has_metrics": false
+      },
+      {
+        "id": "b5",
+        "company": "某电商公司",
+        "role": "后端工程师",
+        "text": "协调测试和前端，推动需求按时上线",
+        "has_metrics": false
+      },
+      {
+        "id": "b6",
+        "company": "某创业公司",
+        "role": "后端实习生",
+        "text": "负责一个内部管理系统的后端，技术栈是 Django + MySQL",
+        "has_metrics": false
+      },
+      {
+        "id": "b7",
+        "company": "某创业公司",
+        "role": "后端实习生",
+        "text": "写了一些数据导出脚本",
+        "has_metrics": false
+      },
+      {
+        "id": "b8",
+        "company": "某创业公司",
+        "role": "后端实习生",
+        "text": "帮助前端调试接口",
+        "has_metrics": false
+      }
+    ],
+    "highlights": [
+      {
+        "point": "订单系统重构",
+        "why_strong": "有项目背景 + 技术栈"
+      },
+      {
+        "point": "内部数据看板",
+        "why_strong": "有个人项目 + 技术栈"
+      },
+      {
+        "point": "技术栈覆盖全面，含云原生",
+        "why_strong": "Python/FastAPI/Django 等关键技能齐全"
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "缺少独立项目或开源贡献描述",
+        "severity": "medium"
+      },
+      {
+        "point": "简历缺少教育背景与时间线",
+        "severity": "low"
+      },
+      {
+        "point": "自我评价过于简单",
+        "severity": "low"
+      }
+    ],
+    "resume_keywords": [
+      "Python",
+      "FastAPI",
+      "Django",
+      "MySQL",
+      "Postgres",
+      "Redis",
+      "RabbitMQ",
+      "Docker",
+      "Kubernetes",
+      "Git",
+      "Linux",
+      "后端",
+      "电商",
+      "微服务"
+    ]
+  }
+}

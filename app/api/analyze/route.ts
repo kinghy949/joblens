@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { JDParserAgent } from '@/lib/agents/jd-parser'
@@ -31,6 +33,16 @@ export async function POST(req: NextRequest) {
   const t0 = Date.now()
   const log = logger.child({ trace_id, route: '/api/analyze' })
 
+  const isDemo = req.nextUrl.searchParams.get('demo') === '1'
+  const urlProvider = req.nextUrl.searchParams.get('provider')
+
+  /* Demo mode short-circuits before body validation — content is ignored */
+  if (isDemo) {
+    const provider = pickProvider(urlProvider)
+    log.info({ provider, isDemo: true }, 'analyze demo')
+    return demoResponse(trace_id, provider, t0)
+  }
+
   /* Parse + validate body */
   let body: z.infer<typeof AnalyzeBody>
   try {
@@ -40,10 +52,11 @@ export async function POST(req: NextRequest) {
     return jsonError('INVALID_BODY', (err as Error).message, 400, trace_id)
   }
 
-  /* Resolve provider: query > body > env */
-  const urlProvider = req.nextUrl.searchParams.get('provider')
   const provider = pickProvider(urlProvider ?? body.provider ?? null)
-  log.info({ provider, jd_len: body.jd_text.length, resume_len: body.resume_text.length }, 'analyze start')
+  log.info(
+    { provider, jd_len: body.jd_text.length, resume_len: body.resume_text.length },
+    'analyze start',
+  )
 
   /* Phase 1: JDParser + ResumeAnalyst in parallel */
   const t1 = Date.now()
@@ -139,5 +152,54 @@ function jsonError(
   return NextResponse.json(
     { error: { code, message }, trace_id },
     { status, headers: { 'x-trace-id': trace_id } },
+  )
+}
+
+let goldenCache: { jd_struct: unknown; resume_struct: unknown; provider: string } | null = null
+
+async function loadGolden() {
+  if (!goldenCache) {
+    const file = path.join(process.cwd(), 'fixtures/golden-result.json')
+    goldenCache = JSON.parse(await fs.readFile(file, 'utf-8'))
+  }
+  return goldenCache!
+}
+
+/**
+ * Demo-mode short-circuit. Loads the frozen golden result, simulates a
+ * realistic per-Agent latency so the UI still feels lively, returns it.
+ */
+async function demoResponse(trace_id: string, provider: string, t0: number) {
+  const golden = await loadGolden()
+  // Simulate "phase 1 in parallel" with realistic timings
+  const jd_ms = 1200 + Math.floor(Math.random() * 600)
+  const resume_ms = 2400 + Math.floor(Math.random() * 800)
+  const phase1_ms = Math.max(jd_ms, resume_ms)
+  await new Promise((r) => setTimeout(r, phase1_ms))
+
+  return NextResponse.json(
+    {
+      trace_id,
+      provider,
+      schema_version: '1.0.0',
+      total_ms: Date.now() - t0,
+      phase1_ms,
+      is_demo: true,
+      agents: {
+        'jd-parser': {
+          status: 'done',
+          duration_ms: jd_ms,
+          tokens_in: 1866,
+          tokens_out: 381,
+        },
+        'resume-analyst': {
+          status: 'done',
+          duration_ms: resume_ms,
+        },
+      },
+      jd_struct: golden.jd_struct,
+      resume_struct: golden.resume_struct,
+    },
+    { status: 200, headers: { 'x-trace-id': trace_id, 'x-demo': '1' } },
   )
 }

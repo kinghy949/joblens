@@ -19,6 +19,51 @@ const DEMO_JD = `我们正在招聘高级后端工程师 · LLM 应用方向。
 
 const DEMO_RESUME_NAME = '示例简历 · 张某 · 后端工程师 3 年.md'
 
+const DEMO_RESUME_TEXT = `# 张某 · 后端工程师（示例简历）
+
+## 个人信息
+- 姓名：张某
+- 工作年限：3 年
+- 邮箱：zhang.demo@example.com
+- 城市：上海
+
+## 教育背景
+- 某 211 大学 · 计算机科学与技术 · 本科 · 2018-2022
+
+## 工作经历
+
+### 某电商公司 · 后端工程师 · 2022.07 – 至今
+负责订单交易链路的后端开发与维护。
+- 负责后端开发，使用 Python 完成 API
+- 参与订单系统的重构，把老的单体服务拆成几个微服务
+- 用 Redis 做缓存，提升了接口性能
+- 处理一些线上 bug，写过几个内部工具脚本
+- 协调测试和前端，推动需求按时上线
+
+### 某创业公司 · 后端实习生 · 2021.06 – 2022.06
+- 负责一个内部管理系统的后端，技术栈是 Django + MySQL
+- 写了一些数据导出脚本
+- 帮助前端调试接口
+
+## 项目经历
+
+### 订单系统重构（公司项目）
+- 把老系统的下单链路拆开，分成订单服务、库存服务、支付服务
+- 接入了 RabbitMQ 做异步消息
+- 部署在 k8s 集群上
+
+### 内部数据看板（个人项目）
+- 用 FastAPI + Vue 写的一个内部用的数据展示页
+- 数据从 Postgres 取，做了一些聚合
+
+## 技术栈
+Python、FastAPI、Django、MySQL、Postgres、Redis、RabbitMQ、Docker、Kubernetes、Git、Linux
+
+## 自我评价
+- 责任心强，能够独立完成被分配的任务
+- 学习能力较好，对新技术保持兴趣
+- 有良好的团队合作精神`
+
 export function AnalyzeForm() {
   const router = useRouter()
   const params = useSearchParams()
@@ -37,6 +82,17 @@ export function AnalyzeForm() {
   }
 
   function start() {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(
+        'joblens.analyze.pending',
+        JSON.stringify({
+          jd_text: jd,
+          resume_text: fileName === DEMO_RESUME_NAME ? DEMO_RESUME_TEXT : jd,
+          is_demo: isDemo,
+          ts: Date.now(),
+        }),
+      )
+    }
     router.push(isDemo ? '/analyze/loading?demo=1' : '/analyze/loading')
   }
 
