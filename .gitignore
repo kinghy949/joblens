@@ -11,3 +11,4 @@ build/
 .turbo/
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+fixtures/.scores-cache.json
