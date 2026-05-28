@@ -8,10 +8,10 @@
 ## 🔴 阻塞级
 
 ### R1. Llama 流式 JSON 可能不"边出边显示"
-**问题**：`streamObject` 依赖模型渐进式输出 JSON；Llama 在 NIM 上很可能等整段 JSON 生成完才一次性返回，"四面板跳字" demo 卖点失效。
-**应对**：架构采纳**双通道输出**——每个 Agent 同时产出流式的 `narration`（人话描述）和最终的 `result` JSON。Llama 模式靠 narration 保证视觉流式效果。
-**跟踪**：`docs/architecture.md` 第二节 5；W1-Spike Issue
-**状态**：✅ 设计已落
+**问题**：`streamObject` 依赖模型渐进式输出 JSON；Llama 在 NIM 上可能等整段 JSON 生成完才一次性返回，"四面板跳字" demo 卖点失效。
+**应对**：~~双通道输出~~ → **2026-05-28 spike 已验证 NIM-Llama 的 `streamObject` 真增量**（124 chunks / 6.5s）。直接用 `streamObject`，前端订阅 `partialObjectStream` 渲染。
+**跟踪**：`docs/spike-streaming-results.md`
+**状态**：✅ **风险解除**
 
 ### R2. NVIDIA NIM 真实免费额度未核实
 **问题**：文档假设"~1000 次/月"是估算，实际 RPM 限制、月配额、商用条款都未确认。开发开始才发现限流 = 重做方案。

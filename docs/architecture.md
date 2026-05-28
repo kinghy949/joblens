@@ -224,28 +224,20 @@ Llama 模式下所有 Agent 用同一模型（NIM 免费额度限制下最经济
 - Claude：用原生 tool use / `streamObject`，schema 合规率 99%+
 - Llama (NIM)：用 `response_format: { type: "json_object" }` + 在 prompt 中强约束 + Zod 校验 + 失败重试 1 次。OpenAI-compatible JSON mode 在 NIM 上的稳定性需开发阶段实测，必要时降级为"prompt 内输出 JSON 块 + 正则提取"
 
-**流式渲染策略（关键 demo 问题）：**
+**流式渲染策略（已 spike 验证 · 2026-05-28）：**
 
-`streamObject` 是否能让用户看到"边推理边出字"取决于模型本身的输出节奏：
-- **Claude** 是渐进式生成 JSON 的，原生支持 partial 流式
-- **Llama 在 NIM 上很可能等整段 JSON 生成完才返回**，这会让"四面板同时跳字"的核心 demo 卖点失效
+✅ **结论：直接用 `streamObject`，不需要双通道兜底**。
 
-为兼容两家模型并保留视觉冲击力，Agent 输出采用**双通道结构**：
+R1 spike 实测（`scripts/spike-streaming.ts`，结果详见 `docs/spike-streaming-results.md`）：
+- NIM-Llama 3.3 70B 在 `streamObject` 模式下产出 **124 个 chunk / 6.5s**，首个 chunk 2.6s 到达
+- 是真增量，客户端能在 `partialObjectStream` 上拿到逐步成型的 JSON 对象
 
-```
-[narration: 流式人话描述]
-分析 JD 中... 注意到 "高级后端" + "LLM 应用方向" 这两个关键定位...
-识别出 8 个硬技能、3 个隐藏要求...
-（边推理边输出，UI 直接显示）
+UI 渲染做法：
+- 客户端订阅 `partialObjectStream`，每个 partial 推进时根据字段填充情况做"打字机式"渲染
+- 例：`partial.hard_skills` 数组每多一项就在面板里 append 一行；`partial.keywords` 像逐个吐字一样填入
+- "Agent 面板的 narration 区"完全由前端从 partial 字段衍生展示，不需要模型再单独产 narration 段
 
-[result: 结构化 JSON]
-{ "role_title": "...", "hard_skills": [...] }
-（最后输出，UI 静默落入 context）
-```
-
-- Llama 模式：narration 段保证流式效果；JSON 段为最终结构化结果
-- Claude 模式：可选择保留双通道（一致性），或直接用 `streamObject` 取消 narration（更省 token）
-- **Week 1 必须先 spike 验证两家 provider 的真实流式行为**，再决定最终方案（见 Issue W1-Spike-Streaming）
+Claude 模式延后用同样 spike 脚本验证（无 key），可预期同样支持增量。
 
 **Prompt Caching 策略：**
 - Claude 模式：system prompt + few-shot 走 prompt caching（>1024 tokens 命中），冷启 ~$0.04，命中 ~$0.012
