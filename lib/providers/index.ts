@@ -6,7 +6,8 @@ import type { ProviderName, Tier } from '@/lib/schemas'
 /** Per-tier model id for each provider */
 const MODELS = {
   llama: {
-    light: 'meta/llama-3.3-70b-instruct',
+    // 8B for light/structured tasks → ~3-5x faster than 70B at similar accuracy
+    light: 'meta/llama-3.1-8b-instruct',
     heavy: 'meta/llama-3.3-70b-instruct',
   },
   claude: {

@@ -202,13 +202,19 @@ const JDParserAgent = {
 
 | Agent | Tier | Llama 模式 | Claude 模式 |
 |---|---|---|---|
-| JDParserAgent | light | llama-3.3-70b | haiku 4.5 |
+| JDParserAgent | light | **llama-3.1-8b** | haiku 4.5 |
 | ResumeAnalystAgent | heavy | llama-3.3-70b | sonnet 4.6 |
 | MatchScorerAgent | heavy | llama-3.3-70b | sonnet 4.6 |
 | RewriterAgent | heavy | llama-3.3-70b | sonnet 4.6 |
 | InterviewerAgent | heavy | llama-3.3-70b | sonnet 4.6 |
 
-Llama 模式下所有 Agent 用同一模型（NIM 免费额度限制下最经济）；Claude 模式保留 Haiku/Sonnet 分级。
+Llama 模式下 light tier 用 8B（**实测 JDParser P50 仅 2.2s**），heavy tier 用 70B 保质量。
+Claude 模式保留 Haiku/Sonnet 分级。
+
+**流式 vs 速度的实测发现（2026-05-28）：**
+- 70B 在 streamObject 下产出 ~300 partials（真增量流式），但整体 ~30s
+- 8B 在 streamObject 下只产出 1 partial（输出完成一次性返回），但整体 ~3s
+- V1 选择"速度优先 + 客户端模拟打字机动画"——比"真流式但慢"对 demo 更友好
 
 **Provider 切换方式（V1）：**
 - 环境变量 `PROVIDER=llama`（默认）或 `claude`
