@@ -64,30 +64,98 @@ Python、FastAPI、Django、MySQL、Postgres、Redis、RabbitMQ、Docker、Kuber
 - 学习能力较好，对新技术保持兴趣
 - 有良好的团队合作精神`
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024
+
+type ResumeState =
+  | { kind: 'empty' }
+  | { kind: 'uploading'; name: string }
+  | { kind: 'ready'; name: string; text: string; chars: number; source: 'upload' | 'example' }
+  | { kind: 'error'; name?: string; message: string }
+
 export function AnalyzeForm() {
   const router = useRouter()
   const params = useSearchParams()
   const isDemo = params.get('demo') === '1'
 
   const [jd, setJd] = useState(isDemo ? DEMO_JD : '')
-  const [fileName, setFileName] = useState<string | null>(
-    isDemo ? DEMO_RESUME_NAME : null,
+  const [resume, setResume] = useState<ResumeState>(() =>
+    isDemo
+      ? {
+          kind: 'ready',
+          name: DEMO_RESUME_NAME,
+          text: DEMO_RESUME_TEXT,
+          chars: DEMO_RESUME_TEXT.length,
+          source: 'example',
+        }
+      : { kind: 'empty' },
   )
 
-  const canSubmit = jd.trim().length >= 50 && fileName
+  const canSubmit =
+    jd.trim().length >= 50 && resume.kind === 'ready' && resume.text.length >= 100
 
   function useExample() {
     setJd(DEMO_JD)
-    setFileName(DEMO_RESUME_NAME)
+    setResume({
+      kind: 'ready',
+      name: DEMO_RESUME_NAME,
+      text: DEMO_RESUME_TEXT,
+      chars: DEMO_RESUME_TEXT.length,
+      source: 'example',
+    })
+  }
+
+  async function onFileChange(file: File | undefined) {
+    if (!file) return
+
+    if (file.size > MAX_FILE_SIZE) {
+      setResume({
+        kind: 'error',
+        name: file.name,
+        message: `文件超过 5MB 上限（当前 ${(file.size / 1024 / 1024).toFixed(1)}MB）`,
+      })
+      return
+    }
+
+    setResume({ kind: 'uploading', name: file.name })
+
+    const form = new FormData()
+    form.append('file', file)
+
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      const body = await res.json()
+      if (!res.ok) {
+        setResume({
+          kind: 'error',
+          name: file.name,
+          message: body?.error?.message ?? `HTTP ${res.status}`,
+        })
+        return
+      }
+      setResume({
+        kind: 'ready',
+        name: body.filename ?? file.name,
+        text: body.text,
+        chars: body.chars ?? body.text.length,
+        source: 'upload',
+      })
+    } catch (err) {
+      setResume({
+        kind: 'error',
+        name: file.name,
+        message: (err as Error).message,
+      })
+    }
   }
 
   function start() {
+    if (resume.kind !== 'ready') return
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(
         'joblens.analyze.pending',
         JSON.stringify({
           jd_text: jd,
-          resume_text: fileName === DEMO_RESUME_NAME ? DEMO_RESUME_TEXT : jd,
+          resume_text: resume.text,
           is_demo: isDemo,
           ts: Date.now(),
         }),
@@ -102,7 +170,7 @@ export function AnalyzeForm() {
         <div className="mx-auto max-w-container px-6 pt-12 md:px-12">
           <h1 className="text-display">开始分析</h1>
           <p className="mt-2 text-body-md text-foreground-variant">
-            粘贴一段 JD + 上传你的简历，AI 会在 15 秒内给出多维度报告。
+            粘贴一段 JD + 上传你的简历，AI 会在 15 秒内给出多维度报告。简历文件解析后即被丢弃，不入库不落盘。
           </p>
 
           <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -136,35 +204,8 @@ export function AnalyzeForm() {
               <label className="text-label-sm uppercase tracking-wider text-foreground-variant">
                 简历 · RESUME
               </label>
-              <label className="mt-3 flex h-[480px] cursor-pointer flex-col items-center justify-center rounded border border-dashed border-outline-variant bg-surface-container-lowest text-center transition hover:border-foreground">
-                <input
-                  type="file"
-                  accept=".pdf,.md,.txt"
-                  className="hidden"
-                  onChange={(e) =>
-                    setFileName(e.target.files?.[0]?.name ?? null)
-                  }
-                />
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="h-12 w-12 text-foreground"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 7.5m0 0L7.5 12M12 7.5V16"
-                  />
-                </svg>
-                <p className="mt-6 text-title-lg text-foreground">
-                  {fileName ?? '把简历拖到这里'}
-                </p>
-                <p className="mt-1 text-body-md text-foreground-variant">
-                  或点击选择文件 · 支持 PDF / MD / TXT · 最大 5MB
-                </p>
-              </label>
+
+              <ResumeDropzone resume={resume} onPick={onFileChange} />
 
               <div className="mt-4 flex items-center justify-between rounded border border-outline-variant bg-surface-container-lowest px-4 py-3">
                 <div className="flex items-center gap-3">
@@ -236,5 +277,107 @@ export function AnalyzeForm() {
         </div>
       </div>
     </>
+  )
+}
+
+function ResumeDropzone({
+  resume,
+  onPick,
+}: {
+  resume: ResumeState
+  onPick: (file: File | undefined) => void
+}) {
+  return (
+    <label className="mt-3 flex h-[480px] cursor-pointer flex-col items-center justify-center rounded border border-dashed border-outline-variant bg-surface-container-lowest text-center transition hover:border-foreground">
+      <input
+        type="file"
+        accept=".pdf,.md,.markdown,.txt,application/pdf,text/markdown,text/plain"
+        className="hidden"
+        onChange={(e) => onPick(e.target.files?.[0] ?? undefined)}
+      />
+
+      {resume.kind === 'empty' && (
+        <>
+          <UploadIcon />
+          <p className="mt-6 text-title-lg text-foreground">把简历拖到这里</p>
+          <p className="mt-1 text-body-md text-foreground-variant">
+            或点击选择文件 · 支持 PDF / MD / TXT · 最大 5MB
+          </p>
+        </>
+      )}
+
+      {resume.kind === 'uploading' && (
+        <>
+          <span className="inline-block h-10 w-10 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+          <p className="mt-6 text-title-lg text-foreground">正在解析 {resume.name}</p>
+          <p className="mt-1 text-body-md text-foreground-variant">服务器内存里跑 unpdf，秒级完成</p>
+        </>
+      )}
+
+      {resume.kind === 'ready' && (
+        <>
+          <CheckIcon />
+          <p className="mt-6 text-title-lg text-foreground">{resume.name}</p>
+          <p className="mt-1 text-body-md text-foreground-variant">
+            {resume.source === 'example' ? '示例数据已填入' : `已解析 ${resume.chars} 字`} · 点击替换
+          </p>
+        </>
+      )}
+
+      {resume.kind === 'error' && (
+        <>
+          <XIcon />
+          <p className="mt-6 text-title-lg text-destructive">{resume.name ?? '上传失败'}</p>
+          <p className="mt-1 max-w-sm text-body-md text-foreground-variant">{resume.message}</p>
+          <p className="mt-3 text-label-md text-foreground">点击重新选择文件</p>
+        </>
+      )}
+    </label>
+  )
+}
+
+function UploadIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className="h-12 w-12 text-foreground"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 7.5m0 0L7.5 12M12 7.5V16"
+      />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className="h-12 w-12 text-success"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+  )
+}
+
+function XIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className="h-12 w-12 text-destructive"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
   )
 }
