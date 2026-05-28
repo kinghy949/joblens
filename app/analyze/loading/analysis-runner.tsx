@@ -1,13 +1,14 @@
 /* eslint-disable react-hooks/set-state-in-effect --
- * This component intentionally reads sessionStorage and fires a one-shot
- * fetch from inside useEffect; the setState calls happen pre-fetch (input
- * validation) and post-fetch (response), both correct uses. */
+ * One-shot fetch effect: reads sessionStorage, opens SSE stream, dispatches
+ * setState per agent event. All setState calls happen in response to external
+ * events (SSE), not synchronously in the effect body's first tick. */
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
+type AgentName = 'jd-parser' | 'resume-analyst' | 'match-scorer' | 'rewriter' | 'interviewer'
 type AgentState = 'pending' | 'running' | 'done' | 'error'
 
 type AgentPanelState = {
@@ -26,32 +27,62 @@ type PendingPayload = {
   is_demo?: boolean
 }
 
-const INITIAL: Record<string, AgentPanelState> = {
+const AGENT_ORDER: AgentName[] = [
+  'jd-parser',
+  'resume-analyst',
+  'match-scorer',
+  'rewriter',
+  'interviewer',
+]
+
+const INITIAL: Record<AgentName, AgentPanelState> = {
   'jd-parser': {
     title: 'JD 解析 Agent',
-    meta: 'meta/llama-3.1-8b · 等待开始',
+    meta: 'phase 1 · llama 3.1 8B',
     state: 'pending',
     body: '',
   },
   'resume-analyst': {
     title: '简历分析 Agent',
-    meta: 'meta/llama-3.3-70b · 等待开始',
+    meta: 'phase 1 · llama 3.3 70B',
     state: 'pending',
     body: '',
   },
   'match-scorer': {
     title: '匹配打分 Agent',
-    meta: '等待 phase 2',
+    meta: 'phase 2 · llama 3.3 70B',
     state: 'pending',
     body: '',
   },
-  'rewriter': {
+  rewriter: {
     title: '改写 Agent',
-    meta: '等待 phase 3',
+    meta: 'phase 3 · llama 3.3 70B',
+    state: 'pending',
+    body: '',
+  },
+  interviewer: {
+    title: '面试官 Agent',
+    meta: 'phase 3 · llama 3.3 70B',
     state: 'pending',
     body: '',
   },
 }
+
+type ServerEvent =
+  | { type: 'agent-start'; agent: AgentName; phase: 1 | 2 | 3 }
+  | {
+      type: 'agent-done'
+      agent: AgentName
+      phase: 1 | 2 | 3
+      duration_ms: number
+      tokens_in?: number
+      tokens_out?: number
+      result: unknown
+    }
+  | { type: 'agent-error'; agent: AgentName; phase: 1 | 2 | 3; error: string }
+  | { type: 'phase-complete'; phase: 1 | 2 | 3 }
+  | { type: 'final'; context: unknown }
+  | { type: 'error'; code: string; message: string }
 
 export function AnalysisRunner() {
   const router = useRouter()
@@ -59,13 +90,12 @@ export function AnalysisRunner() {
   const isDemo = params.get('demo') === '1'
 
   const [panels, setPanels] = useState(INITIAL)
+  const [phase, setPhase] = useState<0 | 1 | 2 | 3>(0)
   const [elapsed, setElapsed] = useState(0)
-  const [traceId, setTraceId] = useState<string | null>(null)
   const [fatalError, setFatalError] = useState<string | null>(null)
   const startedAt = useRef<number | null>(null)
   const fired = useRef(false)
 
-  /* tick the elapsed clock */
   useEffect(() => {
     if (startedAt.current === null) startedAt.current = Date.now()
     const id = setInterval(() => {
@@ -74,7 +104,6 @@ export function AnalysisRunner() {
     return () => clearInterval(id)
   }, [])
 
-  /* fire once: read pending payload from sessionStorage, POST /api/analyze */
   useEffect(() => {
     if (fired.current) return
     fired.current = true
@@ -95,62 +124,31 @@ export function AnalysisRunner() {
       return
     }
 
-    setPanels((p) => ({
-      ...p,
-      'jd-parser': { ...p['jd-parser'], state: 'running', meta: 'meta/llama-3.1-8b · 运行中' },
-      'resume-analyst': {
-        ...p['resume-analyst'],
-        state: 'running',
-        meta: 'meta/llama-3.3-70b · 运行中',
-      },
-    }))
-
     const url = isDemo ? '/api/analyze?demo=1' : '/api/analyze'
-    fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        jd_text: payload.jd_text,
-        resume_text: payload.resume_text,
-      }),
-    })
-      .then(async (res) => {
-        const trace = res.headers.get('x-trace-id')
-        if (trace) setTraceId(trace)
-        const body = await res.json()
-        if (!res.ok) {
-          throw new Error(body?.error?.message ?? `HTTP ${res.status}`)
-        }
+    const controller = new AbortController()
+
+    runStream(url, payload, controller.signal, {
+      onEvent: (ev) => handleEvent(ev, setPanels, setPhase),
+      onFinal: (context) => {
         sessionStorage.setItem(
           'joblens.analyze.result',
-          JSON.stringify(body),
+          JSON.stringify({ ...(context as object), is_demo: isDemo }),
         )
-        setPanels((p) => ({
-          ...p,
-          'jd-parser': updateFromResponse(p['jd-parser'], body.agents['jd-parser'], body.jd_struct, 'jd'),
-          'resume-analyst': updateFromResponse(
-            p['resume-analyst'],
-            body.agents['resume-analyst'],
-            body.resume_struct,
-            'resume',
-          ),
-        }))
-        // give the user 1s to see the success panels before navigating
+        const ctxAny = context as { trace_id?: string }
         setTimeout(() => {
-          router.push(`/result/${trace ?? 'latest'}`)
-        }, 1000)
-      })
-      .catch((err: Error) => {
-        setFatalError(err.message)
-      })
+          router.push(`/result/${ctxAny.trace_id ?? 'latest'}`)
+        }, 1200)
+      },
+      onError: (msg) => setFatalError(msg),
+    })
+
+    return () => controller.abort()
   }, [isDemo, router])
 
-  const allDone =
-    panels['jd-parser'].state === 'done' && panels['resume-analyst'].state === 'done'
+  const allDone = AGENT_ORDER.every((a) => panels[a].state === 'done')
 
   return (
     <div className="min-h-screen bg-surface-container-low">
-      {/* top bar */}
       <header className="border-b border-outline-variant bg-background">
         <div className="mx-auto flex max-w-container items-center justify-between px-6 py-3 md:px-12">
           <Link
@@ -177,26 +175,27 @@ export function AnalysisRunner() {
               <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-surface-container">
                 <div
                   className="h-full bg-foreground transition-all duration-500"
-                  style={{ width: allDone ? '100%' : `${Math.min(95, (elapsed / 12000) * 100)}%` }}
+                  style={{
+                    width: allDone ? '100%' : `${Math.min(95, (phase / 3) * 95)}%`,
+                  }}
                 />
               </div>
             </div>
           </div>
 
           <span className="rounded border border-outline-variant bg-surface-container-lowest px-2 py-1 font-mono text-label-sm text-foreground-variant">
-            trace_id: {traceId ? traceId.slice(0, 8) + '…' : '—'}
+            {isDemo ? 'demo 模式' : 'live'}
           </span>
         </div>
       </header>
 
-      {/* phase chips */}
       <div className="border-b border-outline-variant bg-background">
         <div className="mx-auto flex max-w-container items-center gap-3 overflow-x-auto px-6 py-3 md:px-12">
-          <PhaseChip state={allDone ? 'done' : 'active'}>阶段 1: JD + 简历解析</PhaseChip>
+          <PhaseChip state={phaseState(phase, 1)}>阶段 1: JD + 简历解析</PhaseChip>
           <PhaseSep />
-          <PhaseChip state="pending">阶段 2: 匹配评分</PhaseChip>
+          <PhaseChip state={phaseState(phase, 2)}>阶段 2: 匹配评分</PhaseChip>
           <PhaseSep />
-          <PhaseChip state="pending">阶段 3: 改写 + 面试</PhaseChip>
+          <PhaseChip state={phaseState(phase, 3)}>阶段 3: 改写 + 面试</PhaseChip>
         </div>
       </div>
 
@@ -216,11 +215,10 @@ export function AnalysisRunner() {
         </div>
       )}
 
-      {/* panels */}
       <main className="mx-auto max-w-container px-6 py-6 md:px-12">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {Object.entries(panels).map(([key, p]) => (
-            <AgentPanel key={key} {...p} />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {AGENT_ORDER.map((name) => (
+            <AgentPanel key={name} {...panels[name]} />
           ))}
         </div>
       </main>
@@ -228,53 +226,184 @@ export function AnalysisRunner() {
   )
 }
 
-/* ---------- helpers ---------- */
+/* ---------- SSE consumer ---------- */
 
-function updateFromResponse(
-  current: AgentPanelState,
-  agentSummary: { status: 'done' | 'error'; duration_ms: number; tokens_in?: number | null; tokens_out?: number | null; error?: string },
-  struct: unknown,
-  kind: 'jd' | 'resume',
-): AgentPanelState {
-  if (agentSummary.status === 'error') {
-    return {
-      ...current,
-      state: 'error',
-      meta: `失败 · ${(agentSummary.duration_ms / 1000).toFixed(1)}s`,
-      body: agentSummary.error ?? '未知错误',
-    }
+type StreamHandlers = {
+  onEvent: (event: ServerEvent) => void
+  onFinal: (context: unknown) => void
+  onError: (message: string) => void
+}
+
+async function runStream(
+  url: string,
+  payload: PendingPayload,
+  signal: AbortSignal,
+  handlers: StreamHandlers,
+): Promise<void> {
+  let res: Response
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({
+        jd_text: payload.jd_text,
+        resume_text: payload.resume_text,
+      }),
+      signal,
+    })
+  } catch (err) {
+    handlers.onError((err as Error).message)
+    return
   }
-  return {
-    ...current,
-    state: 'done',
-    meta: `完成 · ${(agentSummary.duration_ms / 1000).toFixed(1)}s`,
-    body: summarizeStruct(kind, struct),
-    durationMs: agentSummary.duration_ms,
-    tokensIn: agentSummary.tokens_in ?? undefined,
-    tokensOut: agentSummary.tokens_out ?? undefined,
+
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try {
+      const body = await res.json()
+      detail = body?.error?.message ?? detail
+    } catch {}
+    handlers.onError(detail)
+    return
+  }
+  if (!res.body) {
+    handlers.onError('响应没有可读流')
+    return
+  }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buf = ''
+
+  while (true) {
+    let chunk: ReadableStreamReadResult<Uint8Array>
+    try {
+      chunk = await reader.read()
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') handlers.onError((err as Error).message)
+      return
+    }
+    if (chunk.done) return
+    buf += decoder.decode(chunk.value, { stream: true })
+
+    while (true) {
+      const idx = buf.indexOf('\n\n')
+      if (idx === -1) break
+      const block = buf.slice(0, idx)
+      buf = buf.slice(idx + 2)
+      const parsed = parseSseBlock(block)
+      if (!parsed) continue
+      handlers.onEvent(parsed)
+      if (parsed.type === 'final') handlers.onFinal((parsed as { context: unknown }).context)
+      if (parsed.type === 'error') handlers.onError((parsed as { message: string }).message)
+    }
   }
 }
 
-function summarizeStruct(kind: 'jd' | 'resume', struct: unknown): string {
-  if (!struct || typeof struct !== 'object') return ''
-  const s = struct as Record<string, unknown>
-  if (kind === 'jd') {
-    const hard = Array.isArray(s.hard_skills) ? s.hard_skills.length : 0
-    const kw = Array.isArray(s.keywords) ? s.keywords.length : 0
-    const hidden = Array.isArray(s.hidden_requirements) ? s.hidden_requirements.length : 0
+function parseSseBlock(block: string): ServerEvent | null {
+  let data = ''
+  for (const line of block.split('\n')) {
+    if (line.startsWith('data:')) data += line.slice(5).trim()
+  }
+  if (!data) return null
+  try {
+    return JSON.parse(data) as ServerEvent
+  } catch {
+    return null
+  }
+}
+
+/* ---------- event → state ---------- */
+
+function handleEvent(
+  event: ServerEvent,
+  setPanels: React.Dispatch<React.SetStateAction<Record<AgentName, AgentPanelState>>>,
+  setPhase: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3>>,
+): void {
+  if (event.type === 'agent-start') {
+    setPanels((prev) => ({
+      ...prev,
+      [event.agent]: {
+        ...prev[event.agent],
+        state: 'running',
+        meta: `phase ${event.phase} · 运行中`,
+      },
+    }))
+  } else if (event.type === 'agent-done') {
+    setPanels((prev) => ({
+      ...prev,
+      [event.agent]: {
+        ...prev[event.agent],
+        state: 'done',
+        meta: `完成 · ${(event.duration_ms / 1000).toFixed(1)}s`,
+        body: summarizeResult(event.agent, event.result),
+        durationMs: event.duration_ms,
+        tokensIn: event.tokens_in,
+        tokensOut: event.tokens_out,
+      },
+    }))
+  } else if (event.type === 'agent-error') {
+    setPanels((prev) => ({
+      ...prev,
+      [event.agent]: {
+        ...prev[event.agent],
+        state: 'error',
+        meta: `失败`,
+        body: event.error,
+      },
+    }))
+  } else if (event.type === 'phase-complete') {
+    setPhase(event.phase)
+  }
+}
+
+function summarizeResult(agent: AgentName, result: unknown): string {
+  if (!result || typeof result !== 'object') return ''
+  const r = result as Record<string, unknown>
+  if (agent === 'jd-parser') {
+    const hard = (r.hard_skills as unknown[])?.length ?? 0
+    const kw = (r.keywords as unknown[])?.length ?? 0
+    const hidden = (r.hidden_requirements as unknown[])?.length ?? 0
     return (
-      `> 岗位定位: ${s.role_title ?? '—'} (${s.seniority ?? ''})\n` +
-      `> ${hard} 个核心技能 · ${kw} 个关键词 · ${hidden} 个隐藏要求\n` +
-      `> ${s.one_liner ?? ''}`
+      `> 岗位定位: ${r.role_title ?? '—'} (${r.seniority ?? ''})\n` +
+      `> ${hard} 个核心技能 · ${kw} 个关键词 · ${hidden} 个隐藏要求\n> ${r.one_liner ?? ''}`
     )
   }
-  const bullets = Array.isArray(s.bullets) ? s.bullets.length : 0
-  const highlights = Array.isArray(s.highlights) ? s.highlights.length : 0
-  const weaknesses = Array.isArray(s.weaknesses) ? s.weaknesses.length : 0
-  return (
-    `> 候选人: ${s.candidate_name ?? '—'} · ${s.experience_years ?? '?'} 年经验\n` +
-    `> ${bullets} 条经历 · ${highlights} 个亮点 · ${weaknesses} 个待改进点`
-  )
+  if (agent === 'resume-analyst') {
+    const bullets = (r.bullets as unknown[])?.length ?? 0
+    const hl = (r.highlights as unknown[])?.length ?? 0
+    const wk = (r.weaknesses as unknown[])?.length ?? 0
+    return (
+      `> 候选人: ${r.candidate_name ?? '—'} · ${r.experience_years ?? '?'} 年\n` +
+      `> ${bullets} 条经历 · ${hl} 亮点 · ${wk} 弱项`
+    )
+  }
+  if (agent === 'match-scorer') {
+    const dims = r.dim_scores as Record<string, number> | undefined
+    return (
+      `> overall: ${r.overall_score} (${r.grade})\n` +
+      `> ${r.summary ?? ''}\n` +
+      (dims
+        ? `> tech ${dims.tech} · exp ${dims.experience} · proj ${dims.project} · comm ${dims.communication} · uniq ${dims.uniqueness}\n`
+        : '')
+    )
+  }
+  if (agent === 'rewriter') {
+    const rewrites = (r.rewrites as unknown[]) ?? []
+    return `> 已产出 ${rewrites.length} 条改写建议`
+  }
+  if (agent === 'interviewer') {
+    const qs = (r.questions as unknown[]) ?? []
+    return `> 生成 ${qs.length} 道针对性面试问题`
+  }
+  return ''
+}
+
+/* ---------- presentational ---------- */
+
+function phaseState(currentPhase: number, target: 1 | 2 | 3): 'done' | 'active' | 'pending' {
+  if (currentPhase >= target) return 'done'
+  if (currentPhase === target - 1) return 'active'
+  return 'pending'
 }
 
 function PhaseChip({ state, children }: { state: 'done' | 'active' | 'pending'; children: React.ReactNode }) {
@@ -307,7 +436,9 @@ function AgentPanel({ title, meta, state, body, durationMs, tokensIn, tokensOut 
     <article className="overflow-hidden rounded-md border border-outline-variant bg-surface-container-lowest">
       <header className="flex items-center justify-between border-b border-outline-variant bg-surface-container-low px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className={`h-7 w-7 rounded ${state === 'done' ? 'bg-foreground' : state === 'error' ? 'bg-destructive' : 'bg-foreground-variant'}`} />
+          <div
+            className={`h-7 w-7 rounded ${state === 'done' ? 'bg-foreground' : state === 'error' ? 'bg-destructive' : 'bg-foreground-variant'}`}
+          />
           <div>
             <p className="text-title-lg text-foreground">{title}</p>
             <p className="text-label-sm text-foreground-variant">{meta}</p>
@@ -316,14 +447,14 @@ function AgentPanel({ title, meta, state, body, durationMs, tokensIn, tokensOut 
         <StatusPill state={state} durationMs={durationMs} />
       </header>
 
-      <div className="bg-[#111111] p-4 font-mono text-[13px] leading-6 text-[#e2e2e5] min-h-[200px]">
+      <div className="bg-[#111111] p-4 font-mono text-[13px] leading-6 text-[#e2e2e5] min-h-[180px]">
         {state === 'pending' && (
           <div className="flex h-full flex-col items-center justify-center text-foreground-variant">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
               <rect x="6" y="11" width="12" height="9" rx="1" />
               <path d="M9 11V7a3 3 0 016 0v4" strokeLinecap="round" />
             </svg>
-            <p className="mt-2 text-label-md">{title === '改写 Agent' || title === '匹配打分 Agent' ? '该 Agent 将在 Week 2 接入' : '等待中…'}</p>
+            <p className="mt-2 text-label-md">等待依赖完成…</p>
           </div>
         )}
         {state === 'running' && (
