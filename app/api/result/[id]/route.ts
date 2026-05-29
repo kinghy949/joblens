@@ -2,15 +2,26 @@ import { NextRequest, NextResponse } from 'next/server'
 import { nanoid } from 'nanoid'
 import { getShare } from '@/lib/server/share'
 import { logger } from '@/lib/server/logger'
+import { getClientIp, rateLimit, rateLimitHeaders } from '@/lib/server/rate-limit'
 
 export const runtime = 'nodejs'
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const trace_id = nanoid(12)
   const log = logger.child({ trace_id, route: 'GET /api/result/[id]' })
+
+  const ip = getClientIp(req)
+  const rl = await rateLimit('share-read', ip, 120, 60)
+  if (!rl.allowed) {
+    const retry = Math.max(0, rl.reset_at - Math.floor(Date.now() / 1000))
+    return NextResponse.json(
+      { error: { code: 'RATE_LIMITED', message: `请求过于频繁，请 ${retry} 秒后再试` }, trace_id },
+      { status: 429, headers: { 'x-trace-id': trace_id, ...rateLimitHeaders(rl) } },
+    )
+  }
 
   const { id } = await params
   if (!id || id.length < 4 || id.length > 64) {
@@ -40,6 +51,7 @@ export async function GET(
       headers: {
         'x-trace-id': trace_id,
         'cache-control': 'private, max-age=30',
+        ...rateLimitHeaders(rl),
       },
     },
   )

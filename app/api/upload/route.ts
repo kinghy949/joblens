@@ -7,6 +7,7 @@ import {
   type ResumeMimeType,
 } from '@/lib/parse-resume'
 import { logger } from '@/lib/server/logger'
+import { getClientIp, rateLimit, rateLimitHeaders } from '@/lib/server/rate-limit'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -16,6 +17,17 @@ const MAX_BYTES = 5 * 1024 * 1024
 export async function POST(req: NextRequest) {
   const trace_id = nanoid(12)
   const log = logger.child({ trace_id, route: '/api/upload' })
+
+  const ip = getClientIp(req)
+  const rl = await rateLimit('upload', ip, 30, 3600)
+  if (!rl.allowed) {
+    log.warn({ ip }, 'rate limited')
+    const retry = Math.max(0, rl.reset_at - Math.floor(Date.now() / 1000))
+    return NextResponse.json(
+      { error: { code: 'RATE_LIMITED', message: `上传过于频繁，请 ${retry} 秒后再试` }, trace_id },
+      { status: 429, headers: { 'x-trace-id': trace_id, ...rateLimitHeaders(rl) } },
+    )
+  }
 
   let form: FormData
   try {
@@ -83,7 +95,7 @@ export async function POST(req: NextRequest) {
       chars: text.length,
       text,
     },
-    { status: 200, headers: { 'x-trace-id': trace_id } },
+    { status: 200, headers: { 'x-trace-id': trace_id, ...rateLimitHeaders(rl) } },
   )
 }
 

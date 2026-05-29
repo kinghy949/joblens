@@ -5,6 +5,7 @@ import { orchestrate, type OrchestratorEvent } from '@/lib/orchestrator'
 import { pickProvider } from '@/lib/providers'
 import { ProviderName } from '@/lib/schemas'
 import { logger } from '@/lib/server/logger'
+import { getClientIp, rateLimit, rateLimitHeaders } from '@/lib/server/rate-limit'
 
 export const runtime = 'nodejs'
 export const maxDuration = 180
@@ -28,6 +29,20 @@ export async function POST(req: NextRequest) {
 
   const isDemo = req.nextUrl.searchParams.get('demo') === '1'
   const urlProvider = req.nextUrl.searchParams.get('provider')
+
+  /* Rate limit. Demo path is generous (it costs us nothing); real LLM path
+   * is strict because each call burns NIM tokens. */
+  const ip = getClientIp(req)
+  const rl = await rateLimit(
+    isDemo ? 'analyze-demo' : 'analyze-real',
+    ip,
+    isDemo ? 200 : 10,
+    3600,
+  )
+  if (!rl.allowed) {
+    log.warn({ ip, isDemo, limit: rl.limit }, 'rate limited')
+    return rateLimitedJson(rl, trace_id)
+  }
 
   let jd_text = ''
   let resume_text = ''
@@ -92,8 +107,29 @@ export async function POST(req: NextRequest) {
 
   return new Response(stream, {
     status: 200,
-    headers: { ...SSE_HEADERS, 'x-trace-id': trace_id },
+    headers: { ...SSE_HEADERS, 'x-trace-id': trace_id, ...rateLimitHeaders(rl) },
   })
+}
+
+function rateLimitedJson(rl: { limit: number; remaining: number; reset_at: number; allowed: boolean }, trace_id: string) {
+  const retry = Math.max(0, rl.reset_at - Math.floor(Date.now() / 1000))
+  return new Response(
+    JSON.stringify({
+      error: {
+        code: 'RATE_LIMITED',
+        message: `请求过于频繁，请 ${retry} 秒后再试`,
+      },
+      trace_id,
+    }),
+    {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-trace-id': trace_id,
+        ...rateLimitHeaders(rl as never),
+      },
+    },
+  )
 }
 
 function jsonError(code: string, message: string, status: number, trace_id: string) {

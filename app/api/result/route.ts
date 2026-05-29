@@ -2,12 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { nanoid } from 'nanoid'
 import { createShare } from '@/lib/server/share'
 import { logger } from '@/lib/server/logger'
+import { getClientIp, rateLimit, rateLimitHeaders } from '@/lib/server/rate-limit'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   const trace_id = nanoid(12)
   const log = logger.child({ trace_id, route: 'POST /api/result' })
+
+  const ip = getClientIp(req)
+  const rl = await rateLimit('share-create', ip, 5, 3600)
+  if (!rl.allowed) {
+    const retry = Math.max(0, rl.reset_at - Math.floor(Date.now() / 1000))
+    return NextResponse.json(
+      { error: { code: 'RATE_LIMITED', message: `生成分享链接过于频繁，请 ${retry} 秒后再试` }, trace_id },
+      { status: 429, headers: { 'x-trace-id': trace_id, ...rateLimitHeaders(rl) } },
+    )
+  }
 
   let body: unknown
   try {
@@ -36,7 +47,7 @@ export async function POST(req: NextRequest) {
   log.info({ id: result.id }, 'share created')
   return NextResponse.json(
     { id: result.id, expires_at: result.expires_at },
-    { status: 201, headers: { 'x-trace-id': trace_id } },
+    { status: 201, headers: { 'x-trace-id': trace_id, ...rateLimitHeaders(rl) } },
   )
 }
 
