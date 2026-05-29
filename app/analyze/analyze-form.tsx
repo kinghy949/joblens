@@ -93,6 +93,13 @@ export function AnalyzeForm() {
   const canSubmit =
     jd.trim().length >= 50 && resume.kind === 'ready' && resume.text.length >= 100
 
+  /* Same predicate the start() function uses, exposed so the action bar can
+   * tell the user which mode they're about to invoke. */
+  const willRunDemo =
+    isDemo &&
+    jd.trim() === DEMO_JD.trim() &&
+    (resume.kind !== 'ready' || resume.source !== 'upload')
+
   function useExample() {
     setJd(DEMO_JD)
     setResume({
@@ -150,18 +157,28 @@ export function AnalyzeForm() {
 
   function start() {
     if (resume.kind !== 'ready') return
+
+    /* Auto-detect real intent: if the user touched either input we run a
+     * real analysis even though they landed via /?demo=1. The ?demo=1 URL
+     * is the demo safety net for "click and forget" walkthroughs; the
+     * moment someone replaces JD text or uploads their own resume we treat
+     * the run as real so they don't get my fixture's analysis. */
+    const jdChanged = jd.trim() !== DEMO_JD.trim()
+    const resumeUploaded = resume.source === 'upload'
+    const useDemo = isDemo && !jdChanged && !resumeUploaded
+
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(
         'joblens.analyze.pending',
         JSON.stringify({
           jd_text: jd,
           resume_text: resume.text,
-          is_demo: isDemo,
+          is_demo: useDemo,
           ts: Date.now(),
         }),
       )
     }
-    router.push(isDemo ? '/analyze/loading?demo=1' : '/analyze/loading')
+    router.push(useDemo ? '/analyze/loading?demo=1' : '/analyze/loading')
   }
 
   return (
@@ -241,19 +258,15 @@ export function AnalyzeForm() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-outline-variant bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-container items-center justify-between px-6 py-4 md:px-12">
           <div className="flex items-center gap-3 text-body-md">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1 text-label-md text-foreground-variant">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="h-3.5 w-3.5"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7v5l3 3" strokeLinecap="round" />
-              </svg>
-              Provider: Llama 3.3 (默认)
-            </span>
+            {willRunDemo ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1 text-label-md text-foreground-variant">
+                🎬 演示模式 · 约 6 秒 · 用示例数据
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground px-3 py-1 text-label-md text-background">
+                ● 真实分析 · 约 80-140 秒 · NIM Llama 3.3 70B
+              </span>
+            )}
             <button className="text-label-md text-foreground underline-offset-2 hover:underline">
               切换 Claude
             </button>
