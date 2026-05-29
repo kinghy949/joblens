@@ -1,0 +1,141 @@
+# JobLens · production compose
+#
+# One-shot deploy on a 2C4G VPS. Stands up everything behind Caddy with
+# automatic Let's Encrypt certificates.
+#
+# Prerequisites on the host:
+#   - Docker Engine + docker-compose plugin
+#   - .env populated (see .env.example)
+#   - DNS A record pointing your domain at the host IP
+#   - Caddyfile edited so the site block matches your real domain
+#
+# Spin up:
+#   docker compose up -d --build
+#
+# Update flow:
+#   git pull && docker compose up -d --build next
+#
+# For local development that does NOT need Caddy, prefer
+# docker-compose.dev.yml (postgres + redis only on host ports) plus
+# `pnpm dev`.
+
+name: joblens
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - next
+    networks:
+      - joblens_net
+
+  next:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://joblens:${POSTGRES_PASSWORD}@postgres:5432/joblens
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - joblens_net
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: joblens
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: joblens
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U joblens"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - joblens_net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    networks:
+      - joblens_net
+
+  cron:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "[cron] starting hourly purge loop"
+        while true; do
+          PGPASSWORD="$$POSTGRES_PASSWORD" psql -h postgres -U joblens -d joblens \
+            -c "delete from shared_results where expires_at < now();" \
+            && echo "[cron] purged $$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            || echo "[cron] purge failed $$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          sleep 3600
+        done
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - joblens_net
+
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p /backups
+        echo "[backup] starting daily pg_dump loop"
+        while true; do
+          ts=$$(date -u +%Y%m%d-%H%M%S)
+          PGPASSWORD="$$POSTGRES_PASSWORD" pg_dump -h postgres -U joblens joblens \
+            | gzip > /backups/joblens-$$ts.sql.gz \
+            && echo "[backup] wrote /backups/joblens-$$ts.sql.gz" \
+            || echo "[backup] FAILED $$ts"
+          find /backups -name "joblens-*.sql.gz" -mtime +7 -delete
+          sleep 86400
+        done
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - joblens_net
+
+volumes:
+  pg_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  joblens_net:

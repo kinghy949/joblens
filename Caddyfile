@@ -1,0 +1,34 @@
+# JobLens · Caddy production config
+#
+# Edit `joblens.example.com` below to your real domain and `email` to your
+# real email (used for Let's Encrypt urgent renewal alerts).
+#
+# Cloudflare warning: keep DNS-only ("grey cloud"). Cloudflare's orange-cloud
+# proxy buffers SSE long-connections and the analysis-in-progress page will
+# stop streaming. Use Cloudflare for DNS only, let Caddy terminate TLS.
+
+{
+    email admin@joblens.example.com
+}
+
+joblens.example.com {
+    encode zstd gzip
+
+    # SSE: flush every chunk immediately, no buffering
+    reverse_proxy next:3000 {
+        flush_interval -1
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        # remove the default Server header so we don't broadcast our stack
+        -Server
+    }
+
+    # /api/analyze in real-LLM mode can take ~140s; bump request timeout
+    request_body {
+        max_size 6MB
+    }
+}
