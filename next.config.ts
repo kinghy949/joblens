@@ -6,13 +6,13 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: '5mb' },
   },
   /* Allow same-LAN devices to use dev mode resources (HMR, fonts, webpack
-   * chunks). Without this, Next 15+ blocks them and the client-side JS
-   * never hydrates. Production builds aren't affected. */
-  allowedDevOrigins: [
-    '192.168.0.0/16',
-    '10.0.0.0/8',
-    '172.16.0.0/12',
-  ],
+   * chunks). Next 15+ blocks them by default and the client-side JS never
+   * hydrates without this. Production builds aren't affected.
+   *
+   * Next only accepts exact hostnames or *.glob wildcards (no CIDR). The
+   * 192.168.* wildcard covers the typical /16 LAN allocation; extend if
+   * your network uses 10.* or 172.16.*. */
+  allowedDevOrigins: ['192.168.*.*', '10.*.*.*', '172.16.*.*', 'localhost'],
 }
 
 export default nextConfig
